@@ -11,6 +11,7 @@
 - `pdks/`: PDK models and ASDL wrappers.
 - `examples/`: legacy/reference docs/config/scratch assets.
 - `analysis/`: scripts for metric extraction and result analysis.
+- `analysis/tools/xyce/`: canonical Xyce post-processing tools (`raw_to_h5.py`, `format_xyce_op_csv.py`).
 - `docs/`: reports, templates, and workflow guidance.
 - `runs/`: generated experiment outputs (expected git-ignored).
 
