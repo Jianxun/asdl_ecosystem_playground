@@ -39,6 +39,11 @@
 - What was easy:
 - What was confusing:
 - Time sinks / avoidable steps:
+- First-run friction:
+  - first failing command:
+  - exact error text:
+  - fix applied:
+  - should update snippets/quickstart/debugging? (yes/no + where)
 
 ## Reusable Outputs
 - snippets added:

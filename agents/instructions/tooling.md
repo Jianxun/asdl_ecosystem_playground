@@ -31,6 +31,7 @@ Legacy scripts in library folders are intentionally removed.
 - Run commands from repo root.
 - Prefer explicit input/output paths.
 - Persist all generated artifacts under `runs/`.
+- Treat repeated GF180 model-card warnings in Xyce (for example `MODEL_BINNING` and `pbswgd` clamp notices) as warnings unless the simulator exits non-zero.
 
 Example:
 
