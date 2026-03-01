@@ -1,0 +1,35 @@
+top: tb
+
+imports:
+  gf: gf180mcu.asdl
+  exp: ./ota_5t_op.asdl
+  ana: analoglib.asdl
+  sim: simulation.xyce.asdl
+
+modules:
+  tb:
+    variables:
+      VDD: 3.3
+      VCM: 1.65
+    instances:
+      dut: exp.ota_5t_op
+      vsrc_vdd: ana.vdc dc=VDD
+      vsrc_vss: ana.vdc dc=0
+      vsrc_inp: ana.vdc dc=VCM
+      vsrc_inn: ana.vdc dc=VCM
+      isrc_bias: ana.idc dc=100e-6
+      rload: ana.res value=10k
+
+      models: gf.models
+      dc_op: sim.dc vsrc=vsrc_inp from=VCM to=VCM step=0.1
+      save_v: sim.save sim_type=DC signals='V(*)'
+      save_i: sim.save sim_type=DC signals='I(*)'
+
+    nets:
+      inp: [vsrc_inp.p, dut.inp]
+      inn: [vsrc_inn.p, dut.inn]
+      out: [dut.out, rload.p]
+      vdd: [vsrc_vdd.p, dut.vdd, isrc_bias.p]
+      vss: [vsrc_vss.p, vsrc_<vdd|inp|inn>.n, dut.vss, rload.n]
+      vbn: [isrc_bias.n, dut.vbn]
+      '0': [vsrc_vss.n]

@@ -1,0 +1,13 @@
+imports:
+  ota_base: tb/tb_ota_5t/ota_nmos.asdl
+
+modules:
+  ota_5t_op:
+    instances:
+      core: ota_base.ota_nmos
+    nets:
+      $in<p|n>: [core.in<p|n>]
+      $out: [core.out]
+      $vbn: [core.vbn]
+      $vdd: [core.vdd]
+      $vss: [core.vss]
