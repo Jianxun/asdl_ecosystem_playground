@@ -1,62 +1,121 @@
 schema_version: 2
 
 current_sprint:
-  - id: T-001
-    title: Normalize source vs generated asset boundaries for libraries
+  - id: T-010
+    title: Bootstrap hello-flow experiment on Xyce
     owner: Executor
     dod: >
-      Remove committed generated simulation/netlist artifacts from `libs/` and
-      establish a deterministic generated-output path under `runs/`. Add ignore
-      rules and a short usage note so future experiments keep `libs/`
-      source-only.
+      Create `libs/exp_010_hello_xyce/` with one minimal DUT + testbench and run
+      the full loop (compile, Xyce simulate, RAW to HDF5 normalization). Capture
+      exact commands and first-run friction in a report.
     verify:
-      - ./venv/bin/python agents/scripts/lint_tasks_state.py
-      - git status --short
+      - ./venv/bin/asdlc netlist libs/exp_010_hello_xyce/tb.asdl --backend sim.xyce
+      - ./venv/bin/python analysis/tools/xyce/raw_to_h5.py runs/exp_010_hello_xyce/<run_id>/tb.spice.raw
     links:
-      scratchpad: agents/scratchpads/T-001_source_generated_boundaries.md
+      scratchpad: agents/scratchpads/T-010_hello_xyce.md
     files:
-      - .gitignore
-      - README.md
-      - libs/
+      - libs/exp_010_hello_xyce/
       - runs/
+      - docs/
 
-  - id: T-002
-    title: Create first smoke experiment library and testbench flow
+  - id: T-011
+    title: Evaluate import and library ergonomics
     owner: Executor
     depends_on:
-      - T-001
+      - T-010
     dod: >
-      Add a minimal inverter smoke experiment under `libs/` with a corresponding
-      testbench and deterministic commands to compile and simulate on one backend
-      (ngspice or xyce). Record expected outputs and artifact paths.
+      Author an experiment that spans `libs_common/`, `libs/`, and `pdks/` imports
+      and document where agents hit ambiguity. Produce one import-style guideline
+      update in `agents/instructions/`.
     verify:
-      - asdlc netlist libs/<experiment>/tb.asdl --backend sim.ngspice
+      - ./venv/bin/asdlc netlist libs/exp_011_imports/tb.asdl --backend sim.xyce
     links:
-      scratchpad: agents/scratchpads/T-002_smoke_experiment.md
+      scratchpad: agents/scratchpads/T-011_imports_ergonomics.md
     files:
-      - libs/
+      - libs/exp_011_imports/
+      - agents/instructions/
       - docs/
-      - analysis/
+
+  - id: T-012
+    title: Evaluate parameterization and sweep authoring ergonomics
+    owner: Executor
+    depends_on:
+      - T-010
+    dod: >
+      Create a parameterized experiment with at least two meaningful parameters
+      and one sweep. Run simulation and normalization, then distill parameter
+      naming/default conventions for agents.
+    verify:
+      - ./venv/bin/asdlc netlist libs/exp_012_params/tb.asdl --backend sim.xyce
+      - xyce runs/exp_012_params/<run_id>/tb.spice
+      - ./venv/bin/python analysis/tools/xyce/raw_to_h5.py runs/exp_012_params/<run_id>/tb.spice.raw
+    links:
+      scratchpad: agents/scratchpads/T-012_params_sweeps.md
+    files:
+      - libs/exp_012_params/
+      - docs/
+      - agents/instructions/snippets.md
+
+  - id: T-013
+    title: Standardize OP inspection and normalization workflow
+    owner: Executor
+    depends_on:
+      - T-010
+    dod: >
+      Run one OP-centric experiment and produce deterministic commands that use
+      `raw_to_h5.py` and `format_xyce_op_csv.py`. Document a compact OP-inspection
+      recipe in the instruction pack.
+    verify:
+      - ./venv/bin/python analysis/tools/xyce/raw_to_h5.py runs/exp_013_op/<run_id>/tb.spice.raw
+      - ./venv/bin/python analysis/tools/xyce/format_xyce_op_csv.py runs/exp_013_op/<run_id>/tb.spice.FD.prn
+    links:
+      scratchpad: agents/scratchpads/T-013_op_normalization.md
+    files:
+      - libs/exp_013_op/
+      - analysis/tools/xyce/
+      - agents/instructions/tooling.md
+      - docs/
 
 backlog:
-  - id: T-003
-    title: Add experiment execution harness and report template automation
+  - id: T-014
+    title: Build failure-mode cookbook for agent triage
     owner: Executor
     depends_on:
-      - T-002
+      - T-010
+      - T-011
     dod: >
-      Add scripts that run compile/sim/analyze in one command and emit a
-      reproducible report skeleton for each run. Ensure paths and naming are
-      stable across reruns.
+      Intentionally trigger at least five common failure classes (import, net,
+      model/include, simulation, post-processing) and document fastest recovery
+      paths in `agents/instructions/debugging.md`.
     verify:
       - ./venv/bin/python agents/scripts/lint_tasks_state.py
     links:
-      scratchpad: agents/scratchpads/T-003_experiment_harness.md
+      scratchpad: agents/scratchpads/T-014_failure_cookbook.md
     files:
-      - scripts/
+      - agents/instructions/debugging.md
       - docs/
-      - analysis/
+
+  - id: T-015
+    title: Extract orchestration requirements from experiment findings
+    owner: Architect
+    depends_on:
+      - T-010
+      - T-011
+      - T-012
+      - T-013
+    dod: >
+      Synthesize findings into a requirement brief for the next-generation
+      simulation orchestrator (separate from legacy `simorc`) including required
+      UX flows, interfaces, and non-goals.
+    verify:
+      - ./venv/bin/python agents/scripts/lint_tasks_state.py
+    links:
+      scratchpad: agents/scratchpads/T-015_orchestrator_requirements.md
+    files:
+      - docs/
+      - agents/context/contract.md
+      - agents/context/project_status.md
 
 exploration_candidates:
-  - Compare ngspice vs xyce output differences on identical ASDL testbenches.
-  - Validate new `global_parameters` and `!{name}` usage in playground experiments.
+  - Run one fresh-agent dry run using only `agents/instructions/` and log misses.
+  - Compare direct CLI loops vs scripted wrappers to define orchestration boundaries.

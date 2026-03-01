@@ -8,16 +8,18 @@ Brief context record for the Architect; reconcile from task status and reviews.
 - Root `libs/` is now the canonical experiment library location.
 - Historical archived examples were removed from the active workspace.
 - Context scaffolding is initialized under `agents/context/`.
+- Agent hydration pack is initialized under `agents/instructions/`.
+- `asdl`/`asdlc` toolchain is installed in local `venv` from GitHub.
 
 ## Last verified status
-- `./venv/bin/python agents/scripts/lint_tasks_state.py` (pending run in this session)
+- `./venv/bin/python agents/scripts/lint_tasks_state.py` (pending run after latest task updates)
 
 ## Next steps (1-3)
-1. Execute `T-001` to enforce source/generated boundaries and keep `libs/` source-only.
-2. Execute `T-002` to land first end-to-end smoke experiment flow.
-3. Execute `T-003` to automate experiment run/report scaffolding.
+1. Execute `T-010` hello-flow experiment on Xyce.
+2. Execute `T-011` import/library ergonomics experiment.
+3. Execute `T-012` parameter/sweep ergonomics experiment.
 
 ## Risks / unknowns
-- Current `libs/` may still include generated artifacts from copied examples.
-- Backend/simulator availability in the local environment is not yet baseline-checked.
-- Inconsistent experiment naming conventions may reduce reproducibility if not standardized early.
+- Xyce availability in this environment is not yet confirmed.
+- Run-id and artifact naming conventions need strict enforcement to keep reports reproducible.
+- Orchestration requirements may drift without disciplined synthesis into `T-015`.

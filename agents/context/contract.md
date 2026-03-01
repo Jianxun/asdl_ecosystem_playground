@@ -18,7 +18,7 @@ The repository is intentionally split between infrastructure (`pdks/`, `libs_com
 ## Interfaces & data contracts
 - Project config is driven by repo-root `.asdlrc`.
 - `.asdlrc` sets:
-  - `backend_config: ${ASDLRC_DIR}/examples/config/backends.yaml`
+  - `backend_config: ${ASDLRC_DIR}/config/backends.yaml`
   - `lib_roots`: `${ASDLRC_DIR}/pdks/${PDK}/asdl`, `${ASDLRC_DIR}/libs_common`, `${ASDLRC_DIR}/libs`
   - `env` variables for `PDK`, `PDK_PATH`, `PDK_ASDL_PATH`, `ASDL_DESIGN_LIBS_PATH`, and `ASDL_LIB_PATH`.
 - Task planning and status contracts:
