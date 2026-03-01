@@ -9,3 +9,4 @@
 [T-010][executor]: Do a compile-only sanity pass before run-folder emission to catch ASDL symbol errors quickly.
 [T-010][executor]: Keep run artifacts in `runs/<experiment>/<run_id>/` to make replay and report references deterministic.
 [T-010][executor]: Repeated GF180 Xyce model warnings can be non-fatal; treat simulator exit code as the primary pass/fail signal.
+[T-010][reviewer]: If scope ambiguity is explicitly resolved by the user in PR discussion, record that approval in review comments and proceed with closeout.

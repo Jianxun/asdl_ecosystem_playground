@@ -1,9 +1,9 @@
 schema_version: 2
 
 T-010:
-  status: request_changes
+  status: done
   pr: 1
-  merged: false
+  merged: true
 
 T-011:
   status: ready
