@@ -22,8 +22,7 @@ modules:
 
       models: gf.models
       dc_op: sim.dc vsrc=vsrc_inp from={VCM} to={VCM} step=0.1
-      save_v: sim.save sim_type=DC signals='V(*)'
-      save_i: sim.save sim_type=DC signals='I(*)'
+      save_op: sim.save_op
 
     nets:
       inp: [vsrc_inp.p, dut.inp]

@@ -12,9 +12,7 @@ R_rload out vss 10k
 .lib /Users/jianxunzhu/Documents/GitHub/asdl_ecosystem/playground/pdks/gf180mcu/xyce/sm141064.xyce typical
 .DC V_vsrc_inp 1.65 1.65 0.1
 
-.PRINT DC FORMAT=raw V(*)
-
-.PRINT DC FORMAT=raw I(*)
+.PRINT DC FORMAT=CSV N(*)
 
 * ===============================================
 * ota_5t_op
