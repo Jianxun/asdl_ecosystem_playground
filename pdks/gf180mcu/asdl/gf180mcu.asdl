@@ -1,0 +1,71 @@
+devices:
+  nfet_03v3:
+    ports: [d, g, s, b]
+    parameters:
+      L: 0.28u
+      W: 1u
+      NF: 1
+      m: 1
+    backends:
+      sim.ngspice:
+        model: nfet_03v3
+        template: |-
+          X{name} {ports} {model} L={L} W={NF}*{W} nf={NF} ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
+          + ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m={m}
+      sim.xyce:
+        model: nfet_03v3
+        template: |-
+          X{name} {ports} {model} L={L} W={NF}*{W} nf={NF} ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
+          + ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m={m}
+      sim.spectre:
+        model: nmos_3p3
+        template: '{name} ({ports}) {model} L={L} W={W} NF={NF} m={m}'
+      lvs.klayout:
+        model: nfet_03v3
+        template: 'M{name} {ports} {model} L={L} W={m}*{NF}*{W}'
+
+  pfet_03v3:
+    ports: [d, g, s, b]
+    parameters:
+      L: 0.28u
+      W: 1u
+      NF: 1
+      m: 1
+    backends:
+      sim.ngspice:
+        model: pfet_03v3
+        template: |-
+          X{name} {ports} {model} L={L} W={NF}*{W} nf={NF} ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
+          + ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m={m}
+      sim.xyce:
+        model: pfet_03v3
+        template: |-
+          X{name} {ports} {model} L={L} W={NF}*{W} nf={NF} ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
+          + ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m={m}
+      sim.spectre:
+        model: pmos_3p3
+        template: '{name} ({ports}) {model} L={L} W={W} NF={NF} m={m}'
+      lvs.klayout:        
+        model: pfet_03v3
+        template: 'M{name} {ports} {model} L={L} W={m}*{NF}*{W}'
+
+  models:
+    backends:
+      sim.ngspice:
+        template: |- 
+          * GF180MCU Model Card:
+          .include $PDK_PATH/ngspice/design.ngspice
+          .lib $PDK_PATH/ngspice/sm141064.ngspice typical
+      sim.xyce:
+        template: |-
+          * GF180MCU Model Card:
+          .include $PDK_PATH/xyce/design.xyce
+          .lib $PDK_PATH/xyce/sm141064.xyce typical
+      sim.spectre:
+        template: |-
+          // GF180MCU Model Card:
+          include $CDS_MODEL_PATH/design.ngspice
+          lib $CDS_MODEL_PATH/sm141064.ngspice typical    
+      lvs.klayout:
+        template: ""
+      

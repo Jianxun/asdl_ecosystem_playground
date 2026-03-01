@@ -1,0 +1,4 @@
+..
+   Generated file. Do not edit directly.
+
+.. asdl:document:: ../pdks/gf180mcu/asdl/gf180mcu_std.asdl

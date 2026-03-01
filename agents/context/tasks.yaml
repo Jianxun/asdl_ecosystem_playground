@@ -1,0 +1,62 @@
+schema_version: 2
+
+current_sprint:
+  - id: T-001
+    title: Normalize source vs generated asset boundaries for libraries
+    owner: Executor
+    dod: >
+      Remove committed generated simulation/netlist artifacts from `libs/` and
+      establish a deterministic generated-output path under `runs/`. Add ignore
+      rules and a short usage note so future experiments keep `libs/`
+      source-only.
+    verify:
+      - ./venv/bin/python agents/scripts/lint_tasks_state.py
+      - git status --short
+    links:
+      scratchpad: agents/scratchpads/T-001_source_generated_boundaries.md
+    files:
+      - .gitignore
+      - README.md
+      - libs/
+      - runs/
+
+  - id: T-002
+    title: Create first smoke experiment library and testbench flow
+    owner: Executor
+    depends_on:
+      - T-001
+    dod: >
+      Add a minimal inverter smoke experiment under `libs/` with a corresponding
+      testbench and deterministic commands to compile and simulate on one backend
+      (ngspice or xyce). Record expected outputs and artifact paths.
+    verify:
+      - asdlc netlist libs/<experiment>/tb.asdl --backend sim.ngspice
+    links:
+      scratchpad: agents/scratchpads/T-002_smoke_experiment.md
+    files:
+      - libs/
+      - docs/
+      - analysis/
+
+backlog:
+  - id: T-003
+    title: Add experiment execution harness and report template automation
+    owner: Executor
+    depends_on:
+      - T-002
+    dod: >
+      Add scripts that run compile/sim/analyze in one command and emit a
+      reproducible report skeleton for each run. Ensure paths and naming are
+      stable across reruns.
+    verify:
+      - ./venv/bin/python agents/scripts/lint_tasks_state.py
+    links:
+      scratchpad: agents/scratchpads/T-003_experiment_harness.md
+    files:
+      - scripts/
+      - docs/
+      - analysis/
+
+exploration_candidates:
+  - Compare ngspice vs xyce output differences on identical ASDL testbenches.
+  - Validate new `global_parameters` and `!{name}` usage in playground experiments.

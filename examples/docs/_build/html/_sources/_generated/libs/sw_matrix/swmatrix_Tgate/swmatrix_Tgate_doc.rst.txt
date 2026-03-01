@@ -1,0 +1,7 @@
+..
+   Generated file. Do not edit directly.
+
+swmatrix_Tgate_doc
+==================
+
+.. asdl:document:: ../libs/sw_matrix/swmatrix_Tgate/swmatrix_Tgate_doc.asdl
