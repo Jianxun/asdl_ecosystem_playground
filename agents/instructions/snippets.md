@@ -11,6 +11,24 @@ imports:
   sim: simulation.xyce.asdl
 ```
 
+## Import style guideline (T-011)
+
+Use one style per import source to reduce ambiguity:
+
+```yaml
+imports:
+  # From pdks/<pdk>/asdl or libs_common/ (resolved by lib_roots)
+  pdk: gf180mcu.asdl
+  ana: analoglib.asdl
+  sim: simulation.xyce.asdl
+
+  # Same directory as current file
+  local_dut: ./ota_5t_op.asdl
+
+  # Cross-library import from libs/ root (avoid ../ hops)
+  shared_ota: tb/tb_ota_5t/ota_nmos.asdl
+```
+
 ## Minimal module shell
 
 ```yaml
