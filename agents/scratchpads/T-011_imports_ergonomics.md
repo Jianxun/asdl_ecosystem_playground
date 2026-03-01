@@ -40,7 +40,7 @@
   - `agents/instructions/snippets.md`
 
 ## PR URL
-- Pending (create in closeout).
+- https://github.com/Jianxun/asdl_ecosystem_playground/pull/2
 
 ## Verification
 - `./venv/bin/python agents/scripts/lint_tasks_state.py` -> pass
@@ -48,10 +48,10 @@
 - `./venv/bin/asdlc netlist libs/exp_011_imports/tb.asdl --backend sim.xyce` (post-implementation) -> pass
 
 ## Status request (Done / Blocked / In Progress)
-- In Progress.
+- Ready for Review.
 
 ## Blockers / Questions
 - None.
 
 ## Next steps
-- Append executor lesson, set task `ready_for_review` with PR number, and open PR.
+- Reviewer to validate import-style guidance and compile reproducibility.
