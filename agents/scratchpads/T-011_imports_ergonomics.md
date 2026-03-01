@@ -21,15 +21,31 @@
 
 ## Milestone notes
 - Intake complete; task selected as ready.
+- Set `T-011` to `in_progress` and passed `lint_tasks_state.py`.
+- TDD compile-first check failed as expected before implementation (`PARSE-004` missing `libs/exp_011_imports/tb.asdl`).
+- Implemented `ota_5t_op` wrapper that imports an OTA core from `libs/` (`tb/tb_ota_5t/ota_nmos.asdl`).
+- Implemented testbench imports spanning all roots: `gf180mcu.asdl` (pdks), `analoglib.asdl` and `simulation.xyce.asdl` (libs_common), plus local DUT wrapper.
+- Compile verification now passes for `libs/exp_011_imports/tb.asdl` on `sim.xyce`.
+- Added import-style guidance to `agents/instructions/snippets.md` and captured ambiguity notes in `docs/exp_011_imports_2026-03-01.md`.
 
 ## Patch summary
-- Pending.
+- Added experiment sources and compile artifacts:
+  - `libs/exp_011_imports/ota_5t_op.asdl`
+  - `libs/exp_011_imports/tb.asdl`
+  - `libs/exp_011_imports/tb.spice`
+  - `libs/exp_011_imports/tb.log.json`
+- Added experiment report:
+  - `docs/exp_011_imports_2026-03-01.md`
+- Updated import guidance:
+  - `agents/instructions/snippets.md`
 
 ## PR URL
-- Pending.
+- Pending (create in closeout).
 
 ## Verification
-- Pending.
+- `./venv/bin/python agents/scripts/lint_tasks_state.py` -> pass
+- `./venv/bin/asdlc netlist libs/exp_011_imports/tb.asdl --backend sim.xyce` (pre-implementation) -> expected fail (`PARSE-004` missing file)
+- `./venv/bin/asdlc netlist libs/exp_011_imports/tb.asdl --backend sim.xyce` (post-implementation) -> pass
 
 ## Status request (Done / Blocked / In Progress)
 - In Progress.
@@ -38,4 +54,4 @@
 - None.
 
 ## Next steps
-- Implement experiment sources and run verification.
+- Append executor lesson, set task `ready_for_review` with PR number, and open PR.
