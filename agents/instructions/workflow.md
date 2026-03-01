@@ -13,15 +13,17 @@ Each experiment should answer one practical question about authoring or tooling 
    - Example: "How quickly can an agent author and run a parameterized AC testbench?"
 2. **Author minimal ASDL**
    - Add/modify only what is needed to answer the question.
-3. **Compile**
-   - Use `asdlc netlist ... --backend sim.xyce` by default.
-4. **Simulate**
+3. **Compile sanity check**
+   - Run `asdlc netlist ... --backend sim.xyce` first to catch authoring errors quickly.
+4. **Compile to run folder**
+   - Emit netlist to `runs/<experiment>/<run_id>/tb.spice` for reproducibility.
+5. **Simulate**
    - Run Xyce and collect raw outputs in `runs/`.
-5. **Normalize**
+6. **Normalize**
    - Convert outputs to analysis-friendly formats (HDF5 / pivoted CSV).
-6. **Analyze**
+7. **Analyze**
    - Verify expected behavior and note friction.
-7. **Distill**
+8. **Distill**
    - Capture lessons, snippets, and workflow improvements.
 
 ## Required outputs per experiment

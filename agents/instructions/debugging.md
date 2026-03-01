@@ -21,6 +21,9 @@ Fast triage path for agent-run ASDL experiments.
   - Verify import path and module symbol spelling.
 - Unknown device/module:
   - Verify library roots and module name.
+- Unresolved simulation primitive (for example `sim.save_dc`):
+  - Check `libs_common/simulation.xyce.asdl` for supported names.
+  - Use `sim.save sim_type=<analysis>` instead of `sim.save_dc`.
 - Net/port mismatch:
   - Re-check port names and net fanout declarations.
 
@@ -39,6 +42,8 @@ Fast triage path for agent-run ASDL experiments.
   - Verify simulation completed and produced expected files.
 - `raw_to_h5.py` errors:
   - Check RAW flags/format and script input path.
+  - If error mentions missing `h5py`, install in project venv:
+    - `./venv/bin/pip install h5py numpy`
 - OP pivot errors:
   - Confirm input is OP-like table with device parameter headers.
 

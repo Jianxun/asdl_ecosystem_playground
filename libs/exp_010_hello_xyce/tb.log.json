@@ -1,0 +1,29 @@
+{
+  "diagnostic_count": 0,
+  "diagnostic_severity_counts": {
+    "error": 0,
+    "fatal": 0,
+    "info": 0,
+    "warning": 0
+  },
+  "diagnostics": [],
+  "emission_name_map": [
+    {
+      "base_name": "tb",
+      "emitted_name": "tb",
+      "file_id": "/Users/jianxunzhu/Documents/GitHub/asdl_ecosystem/playground/libs/exp_010_hello_xyce/tb.asdl",
+      "renamed": false,
+      "symbol": "tb"
+    },
+    {
+      "base_name": "inv",
+      "emitted_name": "inv",
+      "file_id": "/Users/jianxunzhu/Documents/GitHub/asdl_ecosystem/playground/libs/exp_010_hello_xyce/inv.asdl",
+      "renamed": false,
+      "symbol": "inv"
+    }
+  ],
+  "view_bindings": [],
+  "warning_count": 0,
+  "warnings": []
+}

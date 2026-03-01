@@ -29,7 +29,15 @@ instances:
   ac_in: ana.vac dc=1.65 ac_mag=1 ac_phase=0
 
   ac1: sim.ac sweep_type=DEC points=100 start_freq=1 end_freq=1e9
-  save1: sim.save_dc signals='V(*)'
+  save1: sim.save sim_type=AC signals='V(*)'
+```
+
+## Canonical DC save directive
+
+```yaml
+instances:
+  dc1: sim.dc vsrc=vsrc_in from=0 to=3.3 step=0.01
+  save_v: sim.save sim_type=DC signals='V(*)'
 ```
 
 ## Output normalization commands

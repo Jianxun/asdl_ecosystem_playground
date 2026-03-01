@@ -10,9 +10,16 @@ From repo root:
 ./venv/bin/python --version
 asdlc --help
 xyce -v
+./venv/bin/python -c "import numpy, h5py; print('ok')"
 ```
 
 If `xyce` is missing, stop and note the missing dependency in the experiment report.
+
+If the Python dependency check fails, install in the local venv:
+
+```bash
+./venv/bin/pip install numpy h5py
+```
 
 ## 2) Pick or create an experiment library
 
