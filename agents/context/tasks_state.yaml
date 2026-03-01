@@ -1,8 +1,8 @@
 schema_version: 2
 
 T-010:
-  status: blocked
-  pr: null
+  status: ready_for_review
+  pr: 1
   merged: false
 
 T-011:
