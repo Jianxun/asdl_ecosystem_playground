@@ -42,10 +42,14 @@ modules:
 ## Typical sources + analyses
 
 ```yaml
+variables:
+  VDD: 3.3
+  VCM: 1.65
+
 instances:
-  vdd: ana.vdc dc=3.3
+  vdd: ana.vdc dc={VDD}
   vss: ana.vdc dc=0
-  ac_in: ana.vac dc=1.65 ac_mag=1 ac_phase=0
+  ac_in: ana.vac dc={VCM} ac_mag=1 ac_phase=0
 
   ac1: sim.ac sweep_type=DEC points=100 start_freq=1 end_freq=1e9
   save1: sim.save sim_type=AC signals='V(*)'

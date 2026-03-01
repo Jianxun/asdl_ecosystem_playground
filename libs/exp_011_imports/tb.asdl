@@ -8,17 +8,20 @@ imports:
 
 modules:
   tb:
+    variables:
+      VDD: 3.3
+      VCM: 1.65
     instances:
       dut: exp.ota_5t_op
-      vsrc_vdd: ana.vdc dc=3.3
+      vsrc_vdd: ana.vdc dc={VDD}
       vsrc_vss: ana.vdc dc=0
-      vsrc_inp: ana.vdc dc=1.65
-      vsrc_inn: ana.vdc dc=1.65
+      vsrc_inp: ana.vdc dc={VCM}
+      vsrc_inn: ana.vdc dc={VCM}
       isrc_bias: ana.idc dc=100e-6
       rload: ana.res value=10k
 
       models: gf.models
-      dc_op: sim.dc vsrc=vsrc_inp from=1.65 to=1.65 step=0.1
+      dc_op: sim.dc vsrc=vsrc_inp from={VCM} to={VCM} step=0.1
       save_v: sim.save sim_type=DC signals='V(*)'
       save_i: sim.save sim_type=DC signals='I(*)'
 

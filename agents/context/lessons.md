@@ -12,3 +12,4 @@
 [T-010][reviewer]: If scope ambiguity is explicitly resolved by the user in PR discussion, record that approval in review comments and proceed with closeout.
 [T-011][executor]: For cross-library ASDL reuse, prefer `libs`-root-relative imports (for example `tb/tb_ota_5t/ota_nmos.asdl`) over `../` hops to keep paths stable during refactors.
 [T-011][executor]: Xyce source primitives in emitted netlists may not accept symbolic `dc` values reliably in this flow; numeric literals are safer for voltage/current source setup.
+[T-011][executor]: ASDL `modules.tb.variables` values substitute correctly for source parameters when referenced as `{VDD}`/`{VCM}`; unbraced symbols are emitted literally.
