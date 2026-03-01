@@ -23,11 +23,12 @@ imports:
   sim: simulation.xyce.asdl
 
   # Same directory as current file
-  local_dut: ./ota_5t_op.asdl
-
-  # Cross-library import from libs/ root (avoid ../ hops)
-  shared_ota: tb/tb_ota_5t/ota_nmos.asdl
+  local_dut: ./ota_5t.asdl
 ```
+
+For experiment portability, prefer copying dependent DUT files into the same
+`libs/<experiment>/` folder and importing them via `./...` rather than linking
+to other experiment subtrees.
 
 ## Minimal module shell
 

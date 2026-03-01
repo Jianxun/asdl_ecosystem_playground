@@ -18,16 +18,9 @@
     {
       "base_name": "ota_5t_op",
       "emitted_name": "ota_5t_op",
-      "file_id": "/Users/jianxunzhu/Documents/GitHub/asdl_ecosystem/playground/libs/exp_011_imports/ota_5t_op.asdl",
+      "file_id": "/Users/jianxunzhu/Documents/GitHub/asdl_ecosystem/playground/libs/exp_011_imports/ota_5t.asdl",
       "renamed": false,
       "symbol": "ota_5t_op"
-    },
-    {
-      "base_name": "ota_nmos",
-      "emitted_name": "ota_nmos",
-      "file_id": "/Users/jianxunzhu/Documents/GitHub/asdl_ecosystem/playground/libs/tb/tb_ota_5t/ota_nmos.asdl",
-      "renamed": false,
-      "symbol": "ota_nmos"
     }
   ],
   "view_bindings": [],
