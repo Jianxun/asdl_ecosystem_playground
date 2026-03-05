@@ -1,0 +1,8 @@
+* tran_multitone.spice -- deterministic multi-tone transient fixture
+* Sum of tones at 1 kHz, 3 kHz, and 7 kHz
+B1 out 0 V = 0.8*sin(2*pi*1k*time) + 0.4*sin(2*pi*3k*time) + 0.2*sin(2*pi*7k*time)
+Rload out 0 1k
+
+.save v(out)
+.tran 2u 20m
+.end

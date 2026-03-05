@@ -40,6 +40,8 @@ devices:
       phase: 0
 
     backends:
+      sim.ngspice:
+        template: 'V_{name} {ports} SIN ({offset} {amp} {freq} {td} {theta} {phase})'
       sim.xyce:
         template: 'V_{name} {ports} SIN ({offset} {amp} {freq} {td} {theta} {phase})'
 

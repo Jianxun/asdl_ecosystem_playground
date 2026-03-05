@@ -1,0 +1,26 @@
+top: tb
+
+imports:
+  gf: gf180mcu.asdl
+  inv: ./inv.asdl
+  ana: analoglib.asdl
+  sim: simulation.ngspice.asdl
+
+modules:
+  tb:
+    instances:
+      dut: inv.inv
+      vsrc_vdd: ana.vdc dc=3.3
+      vsrc_vss: ana.vdc dc=0
+      vsrc_in: ana.vdc dc=0
+
+      models: gf.models
+      dc1: sim.dc vsrc=vsrc_in from=0 to=3.3 step=0.01
+      save_v: sim.save signals='all'
+
+    nets:
+      vin: [vsrc_in.p, dut.in]
+      vout: [dut.out]
+      vdd: [vsrc_vdd.p, dut.vdd]
+      vss: [vsrc_vss.p, vsrc_<vdd|in>.n, dut.vss]
+      '0': [vsrc_vss.n]
