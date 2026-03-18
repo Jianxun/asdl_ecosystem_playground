@@ -1,24 +1,14 @@
 #!/usr/bin/env python3
 
 import argparse
-import json
 from pathlib import Path
 
-import h5py
-import numpy as np
+from io_helpers import load_signal, require_files, scalar_real_last
+from report_helpers import write_json
 
 
-def load_signal(path: Path, key: str) -> np.ndarray:
-    with h5py.File(path, "r") as f:
-        if key.startswith("signals/"):
-            return np.array(f[key])
-        return np.array(f[f"signals/{key}"])
-
-
-def scalar(x: np.ndarray) -> float:
-    if x.size == 0:
-        raise ValueError("empty signal array")
-    return float(np.real(np.ravel(x)[-1]))
+def combine_tian_scalar(tv: float, ti: float) -> float:
+    return float(1.0 / (1.0 / (1.0 + tv) + 1.0 / (1.0 + ti)) - 1.0)
 
 
 def main() -> int:
@@ -33,19 +23,17 @@ def main() -> int:
     series_h5 = run_dir / "tb_dc_middlebrook_series.spice.raw.h5"
     shunt_h5 = run_dir / "tb_dc_middlebrook_shunt.spice.raw.h5"
 
-    if not series_h5.exists() or not shunt_h5.exists():
-        missing = [str(p) for p in [series_h5, shunt_h5] if not p.exists()]
-        raise FileNotFoundError(f"Missing required file(s): {', '.join(missing)}")
+    require_files([series_h5, shunt_h5])
 
-    vr = scalar(load_signal(series_h5, "V(OUT_SIDE)"))
-    vf = scalar(load_signal(series_h5, "V(INN_SIDE)"))
+    vr = scalar_real_last(load_signal(series_h5, "V(OUT_SIDE)"))
+    vf = scalar_real_last(load_signal(series_h5, "V(INN_SIDE)"))
     tv_meas = -vr / vf
 
-    i_out = scalar(load_signal(shunt_h5, "I(V_VS_OUT)"))
-    i_in = scalar(load_signal(shunt_h5, "I(V_VS_IN)"))
+    i_out = scalar_real_last(load_signal(shunt_h5, "I(V_VS_OUT)"))
+    i_in = scalar_real_last(load_signal(shunt_h5, "I(V_VS_IN)"))
     ti_meas = i_out / i_in
 
-    t_combined_meas = 1.0 / (1.0 / (1.0 + tv_meas) + 1.0 / (1.0 + ti_meas)) - 1.0
+    t_combined_meas = combine_tian_scalar(tv_meas, ti_meas)
 
     gm = float(args.gm)
     go = float(args.go)
@@ -55,7 +43,7 @@ def main() -> int:
     ti_theory = (go + gm) / gi
     t_theory = gm / (go + gi)
 
-    t_combined_theory = 1.0 / (1.0 / (1.0 + tv_theory) + 1.0 / (1.0 + ti_theory)) - 1.0
+    t_combined_theory = combine_tian_scalar(tv_theory, ti_theory)
 
     metrics = {
         "parameters": {"gm_S": gm, "go_S": go, "gi_S": gi},
@@ -82,7 +70,7 @@ def main() -> int:
     }
 
     out_path = run_dir / "metrics_middlebrook_dc_two_pass.json"
-    out_path.write_text(json.dumps(metrics, indent=2), encoding="utf-8")
+    write_json(out_path, metrics)
     print(f"wrote {out_path}")
     return 0
 

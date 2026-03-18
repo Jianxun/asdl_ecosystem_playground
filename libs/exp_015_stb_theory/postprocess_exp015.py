@@ -1,55 +1,20 @@
 #!/usr/bin/env python3
 
 import argparse
-import json
+import sys
 from pathlib import Path
 
-import h5py
-import matplotlib
 import numpy as np
 
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
 
+SCRIPT_DIR = Path(__file__).resolve().parent
+REPO_ROOT = SCRIPT_DIR.parent.parent
+sys.path.insert(0, str(REPO_ROOT))
 
-def resolve_signal_key(h5_path: Path, wanted: str) -> str:
-    with h5py.File(h5_path, "r") as f:
-        keys = list(f["signals"].keys())
-    wanted_u = wanted.upper()
-    for k in keys:
-        if k.upper() == wanted_u:
-            return k
-    raise KeyError(f"Signal '{wanted}' not found in {h5_path}. Available: {keys}")
-
-
-def load_signal(h5_path: Path, wanted: str) -> np.ndarray:
-    key = resolve_signal_key(h5_path, wanted)
-    with h5py.File(h5_path, "r") as f:
-        return np.array(f[f"signals/{key}"])
-
-
-def load_freq(h5_path: Path) -> np.ndarray:
-    with h5py.File(h5_path, "r") as f:
-        return np.array(f["indep_var/FREQUENCY"])
-
-
-def combine_tian(tv: np.ndarray, ti: np.ndarray) -> np.ndarray:
-    return 1.0 / (1.0 / (1.0 + tv) + 1.0 / (1.0 + ti)) - 1.0
-
-
-def unity_cross_hz(freq_hz: np.ndarray, response: np.ndarray) -> float | None:
-    mag = np.abs(response)
-    idx = np.where((mag[:-1] >= 1.0) & (mag[1:] < 1.0))[0]
-    if len(idx) == 0:
-        return None
-    i = int(idx[0])
-    lf1 = np.log10(freq_hz[i])
-    lf2 = np.log10(freq_hz[i + 1])
-    lm1 = np.log10(max(mag[i], 1e-300))
-    lm2 = np.log10(max(mag[i + 1], 1e-300))
-    if abs(lm2 - lm1) < 1e-15:
-        return float(freq_hz[i])
-    return float(10 ** (lf1 + (0.0 - lm1) * (lf2 - lf1) / (lm2 - lm1)))
+from analysis.tools.xyce.io_helpers import load_frequency, load_signal, require_files
+from analysis.tools.xyce.metrics_helpers import combine_tian, max_relative_error, unity_cross_hz
+from analysis.tools.xyce.plot_helpers import save_bar_comparison, save_bode_magnitude_overlay, save_phase_overlay
+from analysis.tools.xyce.report_helpers import write_json, write_markdown_lines
 
 
 def main() -> int:
@@ -70,10 +35,7 @@ def main() -> int:
     dc_shunt_h5 = run_dir / "tb_dc_middlebrook_shunt.spice.raw.h5"
     ac_series_h5 = run_dir / "tb_ac_middlebrook_series.spice.raw.h5"
     ac_shunt_h5 = run_dir / "tb_ac_middlebrook_shunt.spice.raw.h5"
-    required = [dc_series_h5, dc_shunt_h5, ac_series_h5, ac_shunt_h5]
-    missing = [str(p) for p in required if not p.exists()]
-    if missing:
-        raise FileNotFoundError(f"Missing required file(s): {', '.join(missing)}")
+    require_files([dc_series_h5, dc_shunt_h5, ac_series_h5, ac_shunt_h5])
 
     gm = float(args.gm)
     go = float(args.go)
@@ -96,7 +58,7 @@ def main() -> int:
     t_dc_theory = gm / (go + gi)
 
     # AC extraction
-    f = load_freq(ac_series_h5)
+    f = load_frequency(ac_series_h5)
     vr_ac = load_signal(ac_series_h5, "V(OUT_SIDE)")
     vf_ac = load_signal(ac_series_h5, "V(INN_SIDE)")
     tv_ac_meas = -vr_ac / vf_ac
@@ -114,62 +76,45 @@ def main() -> int:
     ti_ac_theory = (go_s + gm) / gi_s
     t_ac_theory = gm / (go_s + gi_s)
 
-    eps = 1e-30
-    max_err_tv = float(np.max(np.abs(tv_ac_meas - tv_ac_theory) / np.maximum(np.abs(tv_ac_theory), eps)))
-    max_err_ti = float(np.max(np.abs(ti_ac_meas - ti_ac_theory) / np.maximum(np.abs(ti_ac_theory), eps)))
-    max_err_t = float(np.max(np.abs(t_ac_meas - t_ac_theory) / np.maximum(np.abs(t_ac_theory), eps)))
+    max_err_tv = max_relative_error(tv_ac_meas, tv_ac_theory)
+    max_err_ti = max_relative_error(ti_ac_meas, ti_ac_theory)
+    max_err_t = max_relative_error(t_ac_meas, t_ac_theory)
 
     ugb_meas = unity_cross_hz(f, t_ac_meas)
     ugb_theory = unity_cross_hz(f, t_ac_theory)
 
-    # Plot 1: AC magnitude comparisons
-    plt.figure(figsize=(8.0, 5.2))
-    plt.semilogx(f, 20 * np.log10(np.maximum(np.abs(tv_ac_meas), 1e-30)), lw=2, label="|Tv| measured")
-    plt.semilogx(f, 20 * np.log10(np.maximum(np.abs(tv_ac_theory), 1e-30)), "--", lw=1.6, label="|Tv| theory")
-    plt.semilogx(f, 20 * np.log10(np.maximum(np.abs(ti_ac_meas), 1e-30)), lw=2, label="|Ti| measured")
-    plt.semilogx(f, 20 * np.log10(np.maximum(np.abs(ti_ac_theory), 1e-30)), "--", lw=1.6, label="|Ti| theory")
-    plt.semilogx(f, 20 * np.log10(np.maximum(np.abs(t_ac_meas), 1e-30)), lw=2.4, label="|T| measured")
-    plt.semilogx(f, 20 * np.log10(np.maximum(np.abs(t_ac_theory), 1e-30)), "--", lw=2.0, label="|T| theory")
-    plt.axhline(0.0, color="k", ls=":", lw=1)
-    plt.xlabel("Frequency (Hz)")
-    plt.ylabel("Magnitude (dB)")
-    plt.title("EXP-015 AC Two-Pass vs Theory")
-    plt.grid(alpha=0.25, which="both")
-    plt.legend(frameon=False, ncol=2)
-    plt.tight_layout()
-    plt.savefig(run_dir / "plot_exp015_ac_magnitudes.png", dpi=180)
-    plt.close()
+    save_bode_magnitude_overlay(
+        f,
+        [
+            (tv_ac_meas, "|Tv| measured", "-", 2.0),
+            (tv_ac_theory, "|Tv| theory", "--", 1.6),
+            (ti_ac_meas, "|Ti| measured", "-", 2.0),
+            (ti_ac_theory, "|Ti| theory", "--", 1.6),
+            (t_ac_meas, "|T| measured", "-", 2.4),
+            (t_ac_theory, "|T| theory", "--", 2.0),
+        ],
+        out_path=run_dir / "plot_exp015_ac_magnitudes.png",
+        title="EXP-015 AC Two-Pass vs Theory",
+        legend_ncol=2,
+    )
 
-    # Plot 2: loop-gain phase
-    plt.figure(figsize=(8.0, 4.6))
-    plt.semilogx(f, np.unwrap(np.angle(t_ac_meas)) * 180.0 / np.pi, lw=2.2, label="phase(T) measured")
-    plt.semilogx(f, np.unwrap(np.angle(t_ac_theory)) * 180.0 / np.pi, "--", lw=1.8, label="phase(T) theory")
-    plt.xlabel("Frequency (Hz)")
-    plt.ylabel("Phase (deg)")
-    plt.title("EXP-015 Loop Gain Phase")
-    plt.grid(alpha=0.25, which="both")
-    plt.legend(frameon=False)
-    plt.tight_layout()
-    plt.savefig(run_dir / "plot_exp015_t_phase.png", dpi=180)
-    plt.close()
+    save_phase_overlay(
+        f,
+        [
+            (t_ac_meas, "phase(T) measured", "-", 2.2),
+            (t_ac_theory, "phase(T) theory", "--", 1.8),
+        ],
+        out_path=run_dir / "plot_exp015_t_phase.png",
+        title="EXP-015 Loop Gain Phase",
+    )
 
-    # Plot 3: DC bar comparison
-    labels = ["Tv", "Ti", "T"]
-    measured = [tv_dc_meas, ti_dc_meas, t_dc_meas]
-    theory = [tv_dc_theory, ti_dc_theory, t_dc_theory]
-    x = np.arange(len(labels))
-    w = 0.35
-    plt.figure(figsize=(6.4, 4.2))
-    plt.bar(x - w / 2, measured, width=w, label="Measured")
-    plt.bar(x + w / 2, theory, width=w, label="Theory")
-    plt.xticks(x, labels)
-    plt.ylabel("Value")
-    plt.title("EXP-015 DC Two-Pass Check")
-    plt.grid(axis="y", alpha=0.25)
-    plt.legend(frameon=False)
-    plt.tight_layout()
-    plt.savefig(run_dir / "plot_exp015_dc_summary.png", dpi=180)
-    plt.close()
+    save_bar_comparison(
+        labels=["Tv", "Ti", "T"],
+        measured=[tv_dc_meas, ti_dc_meas, t_dc_meas],
+        theory=[tv_dc_theory, ti_dc_theory, t_dc_theory],
+        out_path=run_dir / "plot_exp015_dc_summary.png",
+        title="EXP-015 DC Two-Pass Check",
+    )
 
     summary = {
         "parameters": {
@@ -203,7 +148,7 @@ def main() -> int:
         },
     }
     summary_path = run_dir / "summary_exp015.json"
-    summary_path.write_text(json.dumps(summary, indent=2), encoding="utf-8")
+    write_json(summary_path, summary)
 
     report_lines = [
         "# EXP-015 Reproduction Summary",
@@ -226,7 +171,7 @@ def main() -> int:
         "- `plot_exp015_t_phase.png`",
         "- `plot_exp015_dc_summary.png`",
     ]
-    (run_dir / "summary_exp015.md").write_text("\n".join(report_lines) + "\n", encoding="utf-8")
+    write_markdown_lines(run_dir / "summary_exp015.md", report_lines)
 
     print(f"wrote {summary_path}")
     print(f"wrote {run_dir / 'summary_exp015.md'}")

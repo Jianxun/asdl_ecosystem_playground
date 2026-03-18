@@ -1,56 +1,13 @@
 #!/usr/bin/env python3
 
 import argparse
-import json
 from pathlib import Path
 
-import h5py
 import numpy as np
 
-
-def resolve_signal_key(h5_path: Path, wanted: str) -> str:
-    with h5py.File(h5_path, "r") as f:
-        keys = list(f["signals"].keys())
-    wanted_u = wanted.upper()
-    for k in keys:
-        if k.upper() == wanted_u:
-            return k
-    raise KeyError(f"Signal '{wanted}' not found in {h5_path}. Available: {keys}")
-
-
-def load_signal(h5_path: Path, wanted: str) -> np.ndarray:
-    key = resolve_signal_key(h5_path, wanted)
-    with h5py.File(h5_path, "r") as f:
-        return np.array(f[f"signals/{key}"])
-
-
-def load_freq(h5_path: Path) -> np.ndarray:
-    with h5py.File(h5_path, "r") as f:
-        return np.array(f["indep_var/FREQUENCY"])
-
-
-def unity_cross_hz(freq_hz: np.ndarray, response: np.ndarray) -> float | None:
-    mag = np.abs(response)
-    idx = np.where((mag[:-1] >= 1.0) & (mag[1:] < 1.0))[0]
-    if len(idx) == 0:
-        return None
-    i = int(idx[0])
-    lf1 = np.log10(freq_hz[i])
-    lf2 = np.log10(freq_hz[i + 1])
-    lm1 = np.log10(max(mag[i], 1e-300))
-    lm2 = np.log10(max(mag[i + 1], 1e-300))
-    if abs(lm2 - lm1) < 1e-15:
-        return float(freq_hz[i])
-    return float(10 ** (lf1 + (0.0 - lm1) * (lf2 - lf1) / (lm2 - lm1)))
-
-
-def combine_tian(tv: np.ndarray, ti: np.ndarray) -> np.ndarray:
-    return 1.0 / (1.0 / (1.0 + tv) + 1.0 / (1.0 + ti)) - 1.0
-
-
-def pick_at(freq_hz: np.ndarray, arr: np.ndarray, target_hz: float) -> complex:
-    i = int(np.argmin(np.abs(freq_hz - target_hz)))
-    return complex(arr[i])
+from io_helpers import complex_at_frequency, load_frequency, load_signal, require_files
+from metrics_helpers import combine_tian, relative_error, unity_cross_hz
+from report_helpers import write_json
 
 
 def main() -> int:
@@ -67,11 +24,9 @@ def main() -> int:
     series_h5 = run_dir / "tb_ac_middlebrook_series.spice.raw.h5"
     shunt_h5 = run_dir / "tb_ac_middlebrook_shunt.spice.raw.h5"
 
-    if not series_h5.exists() or not shunt_h5.exists():
-        missing = [str(p) for p in [series_h5, shunt_h5] if not p.exists()]
-        raise FileNotFoundError(f"Missing required file(s): {', '.join(missing)}")
+    require_files([series_h5, shunt_h5])
 
-    f = load_freq(series_h5)
+    f = load_frequency(series_h5)
 
     vr = load_signal(series_h5, "V(OUT_SIDE)")
     vf = load_signal(series_h5, "V(INN_SIDE)")
@@ -98,10 +53,9 @@ def main() -> int:
     t_theory = gm / (go_s + gi_s)
     t_theory_combined = combine_tian(tv_theory, ti_theory)
 
-    eps = 1e-30
-    tv_rel_err = np.abs(tv_meas - tv_theory) / np.maximum(np.abs(tv_theory), eps)
-    ti_rel_err = np.abs(ti_meas - ti_theory) / np.maximum(np.abs(ti_theory), eps)
-    t_rel_err = np.abs(t_meas - t_theory) / np.maximum(np.abs(t_theory), eps)
+    tv_rel_err = relative_error(tv_meas, tv_theory)
+    ti_rel_err = relative_error(ti_meas, ti_theory)
+    t_rel_err = relative_error(t_meas, t_theory)
 
     metrics = {
         "parameters": {
@@ -133,26 +87,26 @@ def main() -> int:
         },
         "samples": {
             "f_1Hz": {
-                "Tv_measured": {"real": float(np.real(pick_at(f, tv_meas, 1.0))), "imag": float(np.imag(pick_at(f, tv_meas, 1.0)))},
-                "Tv_theory": {"real": float(np.real(pick_at(f, tv_theory, 1.0))), "imag": float(np.imag(pick_at(f, tv_theory, 1.0)))},
-                "Ti_measured": {"real": float(np.real(pick_at(f, ti_meas, 1.0))), "imag": float(np.imag(pick_at(f, ti_meas, 1.0)))},
-                "Ti_theory": {"real": float(np.real(pick_at(f, ti_theory, 1.0))), "imag": float(np.imag(pick_at(f, ti_theory, 1.0)))},
-                "T_measured": {"real": float(np.real(pick_at(f, t_meas, 1.0))), "imag": float(np.imag(pick_at(f, t_meas, 1.0)))},
-                "T_theory": {"real": float(np.real(pick_at(f, t_theory, 1.0))), "imag": float(np.imag(pick_at(f, t_theory, 1.0)))},
+                "Tv_measured": {"real": float(np.real(complex_at_frequency(f, tv_meas, 1.0))), "imag": float(np.imag(complex_at_frequency(f, tv_meas, 1.0)))},
+                "Tv_theory": {"real": float(np.real(complex_at_frequency(f, tv_theory, 1.0))), "imag": float(np.imag(complex_at_frequency(f, tv_theory, 1.0)))},
+                "Ti_measured": {"real": float(np.real(complex_at_frequency(f, ti_meas, 1.0))), "imag": float(np.imag(complex_at_frequency(f, ti_meas, 1.0)))},
+                "Ti_theory": {"real": float(np.real(complex_at_frequency(f, ti_theory, 1.0))), "imag": float(np.imag(complex_at_frequency(f, ti_theory, 1.0)))},
+                "T_measured": {"real": float(np.real(complex_at_frequency(f, t_meas, 1.0))), "imag": float(np.imag(complex_at_frequency(f, t_meas, 1.0)))},
+                "T_theory": {"real": float(np.real(complex_at_frequency(f, t_theory, 1.0))), "imag": float(np.imag(complex_at_frequency(f, t_theory, 1.0)))},
             },
             "f_1e8Hz": {
-                "Tv_measured": {"real": float(np.real(pick_at(f, tv_meas, 1e8))), "imag": float(np.imag(pick_at(f, tv_meas, 1e8)))},
-                "Tv_theory": {"real": float(np.real(pick_at(f, tv_theory, 1e8))), "imag": float(np.imag(pick_at(f, tv_theory, 1e8)))},
-                "Ti_measured": {"real": float(np.real(pick_at(f, ti_meas, 1e8))), "imag": float(np.imag(pick_at(f, ti_meas, 1e8)))},
-                "Ti_theory": {"real": float(np.real(pick_at(f, ti_theory, 1e8))), "imag": float(np.imag(pick_at(f, ti_theory, 1e8)))},
-                "T_measured": {"real": float(np.real(pick_at(f, t_meas, 1e8))), "imag": float(np.imag(pick_at(f, t_meas, 1e8)))},
-                "T_theory": {"real": float(np.real(pick_at(f, t_theory, 1e8))), "imag": float(np.imag(pick_at(f, t_theory, 1e8)))},
+                "Tv_measured": {"real": float(np.real(complex_at_frequency(f, tv_meas, 1e8))), "imag": float(np.imag(complex_at_frequency(f, tv_meas, 1e8)))},
+                "Tv_theory": {"real": float(np.real(complex_at_frequency(f, tv_theory, 1e8))), "imag": float(np.imag(complex_at_frequency(f, tv_theory, 1e8)))},
+                "Ti_measured": {"real": float(np.real(complex_at_frequency(f, ti_meas, 1e8))), "imag": float(np.imag(complex_at_frequency(f, ti_meas, 1e8)))},
+                "Ti_theory": {"real": float(np.real(complex_at_frequency(f, ti_theory, 1e8))), "imag": float(np.imag(complex_at_frequency(f, ti_theory, 1e8)))},
+                "T_measured": {"real": float(np.real(complex_at_frequency(f, t_meas, 1e8))), "imag": float(np.imag(complex_at_frequency(f, t_meas, 1e8)))},
+                "T_theory": {"real": float(np.real(complex_at_frequency(f, t_theory, 1e8))), "imag": float(np.imag(complex_at_frequency(f, t_theory, 1e8)))},
             },
         },
     }
 
     out_path = run_dir / "metrics_middlebrook_ac_two_pass.json"
-    out_path.write_text(json.dumps(metrics, indent=2), encoding="utf-8")
+    write_json(out_path, metrics)
     print(f"wrote {out_path}")
     return 0
 
