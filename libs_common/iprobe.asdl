@@ -1,0 +1,23 @@
+top: iprobe_series
+
+imports:
+  ana: analoglib.asdl
+
+modules:
+  iprobe_series:
+    instances:
+      vser: ana.vac dc=0 ac_mag=1 ac_phase=0
+      ishunt: ana.iac dc=0 ac_mag=0 ac_phase=0
+    nets:
+      $p: [vser.p, ishunt.p]
+      $n: [vser.n, ishunt.n]
+
+  iprobe_shunt:
+    instances:
+      vser: ana.vdc dc=0
+      vsense: ana.vdc dc=0
+      ishunt: ana.iac dc=0 ac_mag=1 ac_phase=0
+    nets:
+      $p: [vser.p, ishunt.p]
+      inj_n: [ishunt.n, vsense.p]
+      $n: [vser.n, vsense.n]
