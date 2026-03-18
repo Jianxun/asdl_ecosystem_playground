@@ -1,6 +1,6 @@
 # Tooling
 
-Current canonical tools for the playground.
+Reference for tools used by the playground. Normative execution policy is in `playbook.md`.
 
 ## Compiler and simulator
 

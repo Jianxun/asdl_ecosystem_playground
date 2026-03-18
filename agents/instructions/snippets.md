@@ -2,6 +2,8 @@
 
 Use these as starting points; adapt per experiment.
 
+Normative import policy lives in `playbook.md`; this file stays example-focused.
+
 ## Minimal XYCE testbench imports
 
 ```yaml
@@ -11,9 +13,9 @@ imports:
   sim: simulation.xyce.asdl
 ```
 
-## Import style guideline (T-011)
+## Import style example (T-011)
 
-Use one style per import source to reduce ambiguity:
+Example pattern to reduce ambiguity:
 
 ```yaml
 imports:
@@ -26,9 +28,7 @@ imports:
   local_dut: ./ota_5t.asdl
 ```
 
-For experiment portability, prefer copying dependent DUT files into the same
-`libs/<experiment>/` folder and importing them via `./...` rather than linking
-to other experiment subtrees.
+For portability rationale and policy language, see `playbook.md`.
 
 ## Minimal module shell
 

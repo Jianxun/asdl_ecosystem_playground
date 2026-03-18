@@ -2,6 +2,8 @@
 
 Canonical loop for ASDL Playground experiments.
 
+Execution policy and command conventions are defined in `playbook.md`.
+
 ## Intent
 
 This is a playground for ergonomics and agent usability, not a conformance test suite.

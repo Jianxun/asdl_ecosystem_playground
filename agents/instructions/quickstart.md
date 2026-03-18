@@ -2,6 +2,8 @@
 
 Use this to run one complete loop with minimal decisions.
 
+Primary policy lives in `playbook.md`; this file is the fastest checklist.
+
 ## 1) Verify environment
 
 From repo root:
@@ -54,3 +56,5 @@ Create/update a report in `docs/` using `experiment_template.md` and include:
 - runtime artifacts
 - friction points (what was confusing or fragile)
 - recommended workflow/tooling improvements
+
+If guidance changes, update one or more files under `agents/instructions/`.
