@@ -2,12 +2,13 @@ schema_version: 2
 
 current_sprint:
   - id: T-010
-    title: Bootstrap hello-flow experiment on Xyce
+    title: Bootstrap hello-flow with GF180 inverter on Xyce
     owner: Executor
     dod: >
-      Create `libs/exp_010_hello_xyce/` with one minimal DUT + testbench and run
-      the full loop (compile, Xyce simulate, RAW to HDF5 normalization). Capture
-      exact commands and first-run friction in a report.
+      Build a minimal GF180 CMOS inverter experiment (`inv_dc`) in
+      `libs/exp_010_hello_xyce/` with one DUT and one DC testbench. Run the full
+      loop (compile, Xyce simulate, RAW to HDF5 normalization). Capture exact
+      commands and first-run friction in a report.
     verify:
       - ./venv/bin/asdlc netlist libs/exp_010_hello_xyce/tb.asdl --backend sim.xyce
       - ./venv/bin/python analysis/tools/xyce/raw_to_h5.py runs/exp_010_hello_xyce/<run_id>/tb.spice.raw
@@ -19,14 +20,15 @@ current_sprint:
       - docs/
 
   - id: T-011
-    title: Evaluate import and library ergonomics
+    title: Evaluate import ergonomics with 5T OTA chain
     owner: Executor
     depends_on:
       - T-010
     dod: >
-      Author an experiment that spans `libs_common/`, `libs/`, and `pdks/` imports
-      and document where agents hit ambiguity. Produce one import-style guideline
-      update in `agents/instructions/`.
+      Build a 5-transistor OTA experiment (`ota_5t_op`) that explicitly imports
+      from `libs_common/`, `libs/`, and `pdks/`. Document where agents hit import
+      ambiguity and produce one import-style guideline update in
+      `agents/instructions/`.
     verify:
       - ./venv/bin/asdlc netlist libs/exp_011_imports/tb.asdl --backend sim.xyce
     links:
@@ -37,14 +39,16 @@ current_sprint:
       - docs/
 
   - id: T-012
-    title: Evaluate parameterization and sweep authoring ergonomics
+    title: Evaluate parameterization ergonomics with current mirror array
     owner: Executor
     depends_on:
       - T-010
     dod: >
-      Create a parameterized experiment with at least two meaningful parameters
-      and one sweep. Run simulation and normalization, then distill parameter
-      naming/default conventions for agents.
+      Build a parameterized current mirror array experiment
+      (`current_mirror_sweep`) with at least two meaningful parameters (for
+      example device width and mirror multiplicity) and one DC sweep. Run
+      simulation and normalization, then distill parameter naming/default
+      conventions for agents.
     verify:
       - ./venv/bin/asdlc netlist libs/exp_012_params/tb.asdl --backend sim.xyce
       - xyce runs/exp_012_params/<run_id>/tb.spice
@@ -57,14 +61,15 @@ current_sprint:
       - agents/instructions/snippets.md
 
   - id: T-013
-    title: Standardize OP inspection and normalization workflow
+    title: Standardize OP inspection with switched transmission gate cell
     owner: Executor
     depends_on:
       - T-010
     dod: >
-      Run one OP-centric experiment and produce deterministic commands that use
-      `raw_to_h5.py` and `format_xyce_op_csv.py`. Document a compact OP-inspection
-      recipe in the instruction pack.
+      Build a switched transmission gate OP experiment (`tgate_op_debug`) from
+      the switch-matrix library style, then produce deterministic commands that
+      use `raw_to_h5.py` and `format_xyce_op_csv.py`. Document a compact
+      OP-inspection recipe in the instruction pack.
     verify:
       - ./venv/bin/python analysis/tools/xyce/raw_to_h5.py runs/exp_013_op/<run_id>/tb.spice.raw
       - ./venv/bin/python analysis/tools/xyce/format_xyce_op_csv.py runs/exp_013_op/<run_id>/tb.spice.FD.prn
@@ -85,8 +90,9 @@ backlog:
       - T-011
     dod: >
       Intentionally trigger at least five common failure classes (import, net,
-      model/include, simulation, post-processing) and document fastest recovery
-      paths in `agents/instructions/debugging.md`.
+      model/include, simulation, post-processing) using the fixed experiment set:
+      `inv_dc`, `ota_5t_op`, `current_mirror_sweep`, and `tgate_op_debug`.
+      Document fastest recovery paths in `agents/instructions/debugging.md`.
     verify:
       - ./venv/bin/python agents/scripts/lint_tasks_state.py
     links:

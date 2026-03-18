@@ -11,3 +11,6 @@ venv/
 # OS/editor
 .DS_Store
 .vscode/
+
+# Tool logs
+*.log.json

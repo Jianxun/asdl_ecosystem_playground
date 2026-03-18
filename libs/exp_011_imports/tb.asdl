@@ -16,9 +16,7 @@ modules:
       vsrc_vdd: ana.vdc dc={VDD}
       vsrc_vss: ana.vdc dc=0
       vsrc_inp: ana.vdc dc={VCM}
-      vsrc_inn: ana.vdc dc={VCM}
       isrc_bias: ana.idc dc=100e-6
-      rload: ana.res value=10k
 
       models: gf.models
       dc_op: sim.dc vsrc=vsrc_inp from={VCM} to={VCM} step=0.1
@@ -26,9 +24,8 @@ modules:
 
     nets:
       inp: [vsrc_inp.p, dut.inp]
-      inn: [vsrc_inn.p, dut.inn]
-      out: [dut.out, rload.p]
+      inn: [dut.inn, dut.out]
       vdd: [vsrc_vdd.p, dut.vdd, isrc_bias.p]
-      vss: [vsrc_vss.p, vsrc_<vdd|inp|inn>.n, dut.vss, rload.n]
+      vss: [vsrc_vss.p, vsrc_<vdd|inp>.n, dut.vss]
       vbn: [isrc_bias.n, dut.vbn]
       '0': [vsrc_vss.n]
