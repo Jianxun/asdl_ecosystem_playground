@@ -70,3 +70,13 @@ xyce ${RUN_DIR}/tb_ac_middlebrook_shunt.spice
 ## Takeaway
 - The same canonical convention validated in DC remains exact in AC for RC grounded admittances.
 - Bench topology, signal mapping, and analyzer formulas are now aligned with theory and can be reused for more complex DUTs.
+
+## Self-contained Reproduction
+- Single-command runner:
+  - `libs/exp_015_stb_theory/reproduce_exp015.sh`
+- End-to-end (compile, simulate, normalize, analyze, and plot):
+  - `libs/exp_015_stb_theory/reproduce_exp015.sh`
+- Optional explicit run id:
+  - `libs/exp_015_stb_theory/reproduce_exp015.sh 20260318T181407Z`
+- Post-processing script (invoked by runner):
+  - `libs/exp_015_stb_theory/postprocess_exp015.py`
