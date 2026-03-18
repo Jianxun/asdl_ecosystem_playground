@@ -77,3 +77,15 @@ libs/<experiment_name>/
 runs/<experiment_name>/<run_id>/
 docs/<experiment_name>_<date>.md
 ```
+
+## Two-pass STB theory baseline (ideal gm fixture)
+
+Use these equations when validating Middlebrook/Tian extraction on the ideal `gm-ro-cin` unity follower:
+
+```text
+Tv = -(Vr/Vf)
+Ti = -(Ir/If)
+1/(1+T) = 1/(1+Tv) + 1/(1+Ti)
+```
+
+Do not mix in the legacy `Tv = -(Vr/Vf)-1` form when using the equation above; it shifts reconstructed unity crossing.
