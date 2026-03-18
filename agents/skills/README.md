@@ -7,6 +7,7 @@ Use this folder for task-oriented playbooks that compose one or more principles 
 - `skill_dc_metrics_pipeline.md`
 - `skill_ac_bode_metrics.md`
 - `skill_asdl_symbol_discovery.md`
+- `skill_pr_cycle.md`
 
 Suggested first skills:
 
