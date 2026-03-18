@@ -1,0 +1,19 @@
+imports:
+  ana: analoglib.asdl
+
+modules:
+  bias_t:
+    variables:
+      l_bias: 1e9
+      c_inj: 1u
+      ac_mag: 1
+      ac_phase: 0
+      dc_inj: 0
+    instances:
+      lbias: ana.ind value={l_bias}
+      cinj: ana.cap value={c_inj}
+      vinj: ana.vac dc={dc_inj} ac_mag={ac_mag} ac_phase={ac_phase}
+    nets:
+      $p: [lbias.p, cinj.p]
+      inj: [cinj.n, vinj.p]
+      $n: [lbias.n, vinj.n]

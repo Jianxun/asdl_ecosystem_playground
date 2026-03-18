@@ -60,6 +60,22 @@ devices:
       lvs.klayout:
         template: ''
 
+  iac:
+    ports: [p, n]
+    parameters:
+      dc: 0
+      ac_mag: 1
+      ac_phase: 0
+    backends:
+      sim.ngspice:
+        template: 'I_{name} {ports} DC {dc} AC {ac_mag} {ac_phase}'
+      sim.xyce:
+        template: 'I_{name} {ports} DC {dc} AC {ac_mag} {ac_phase}'
+      sim.spectre:
+        template: '{name} ({ports}) DC {dc} AC {ac_mag} {ac_phase}'
+      lvs.klayout:
+        template: ''
+
   res:
     ports: [p, n]
     parameters:
@@ -87,3 +103,31 @@ devices:
         template: '{name} ({ports}) capacitor c={value}'
       lvs.klayout:
         template: 'C_{name} {ports} {value}'
+
+  vccs:
+    ports: [p, n, cp, cn]
+    parameters:
+      gm: 1e-3
+    backends:
+      sim.ngspice:
+        template: 'G_{name} {ports} {gm}'
+      sim.xyce:
+        template: 'G_{name} {ports} {gm}'
+      sim.spectre:
+        template: '{name} ({p} {n} {cp} {cn}) vccs gm={gm}'
+      lvs.klayout:
+        template: ''
+
+  ind:
+    ports: [p, n]
+    parameters:
+      value: 1n
+    backends:
+      sim.ngspice:
+        template: 'L_{name} {ports} {value}'
+      sim.xyce:
+        template: 'L_{name} {ports} {value}'
+      sim.spectre:
+        template: '{name} ({ports}) inductor l={value}'
+      lvs.klayout:
+        template: 'L_{name} {ports} {value}'

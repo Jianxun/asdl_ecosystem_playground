@@ -1,0 +1,41 @@
+top: tb
+
+imports:
+  gf: gf180mcu.asdl
+  dutlib: ./ota_5t.asdl
+  ana: analoglib.asdl
+  bt: bias_t.asdl
+  sim: simulation.xyce.asdl
+
+modules:
+  tb:
+    variables:
+      VDD: 3.3
+      VCM: 1.65
+      IBIAS: 100e-6
+      CLOAD: 1p
+      AC_POINTS: 200
+      AC_START: 1
+      AC_STOP: 1e9
+    instances:
+      dut: dutlib.ota_5t_op
+
+      vsrc_vdd: ana.vdc dc={VDD}
+      vsrc_vss: ana.vdc dc=0
+      vsrc_inp: ana.vdc dc={VCM}
+      isrc_bias: ana.idc dc={IBIAS}
+      cload: ana.cap value={CLOAD}
+      loop_probe: bt.bias_t
+
+      models: gf.models
+      ac1: sim.ac sweep_type=DEC points={AC_POINTS} start_freq={AC_START} end_freq={AC_STOP}
+      save_ac: sim.save sim_type=AC signals='V(*) I(*)'
+
+    nets:
+      inp: [vsrc_inp.p, dut.inp]
+      out_fb: [dut.out, cload.p, loop_probe.p]
+      inn_fb: [dut.inn, loop_probe.n]
+      vdd: [vsrc_vdd.p, isrc_bias.p, dut.vdd]
+      vbn: [isrc_bias.n, dut.vbn]
+      vss: [vsrc_vss.p, vsrc_<vdd|inp>.n, dut.vss, cload.n]
+      '0': [vsrc_vss.n]

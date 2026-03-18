@@ -6,8 +6,8 @@ T-010:
   merged: true
 
 T-011:
-  status: ready
-  pr: null
+  status: ready_for_review
+  pr: 2
   merged: false
 
 T-012:

@@ -1,0 +1,30 @@
+top: tb
+
+imports:
+  dutlib: ./ideal_gm_cell.asdl
+  ana: analoglib.asdl
+  sim: simulation.xyce.asdl
+
+modules:
+  tb:
+    variables:
+      GM: 1e-3
+      RO: 100k
+      CIN: 1p
+      CLOAD: 1p
+      AC_POINTS: 200
+      AC_START: 1
+      AC_STOP: 1e9
+    instances:
+      dut: dutlib.ideal_gm_cell gm={GM} ro={RO} cin={CIN}
+
+      vinp: ana.vac dc=0 ac_mag=1 ac_phase=0
+      cload: ana.cap value={CLOAD}
+
+      ac1: sim.ac sweep_type=DEC points={AC_POINTS} start_freq={AC_START} end_freq={AC_STOP}
+      save_ac: sim.save sim_type=AC signals='V(*) I(*)'
+
+    nets:
+      inp: [vinp.p, dut.inp]
+      out_fb: [dut.out, dut.inn, cload.p]
+      '0': [vinp.n, dut.vss, cload.n]

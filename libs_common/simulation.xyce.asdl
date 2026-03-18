@@ -48,3 +48,9 @@ devices:
       sim.xyce:
         template: |
           .PRINT {sim_type} FORMAT={format} {signals}
+
+  save_op:
+    backends:
+      sim.xyce:
+        template: |
+          .PRINT DC FORMAT=CSV N(*)
