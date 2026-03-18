@@ -1,0 +1,181 @@
+#!/usr/bin/env python3
+
+import argparse
+import json
+import os
+import re
+import sys
+from pathlib import Path
+
+try:
+    import yaml
+except ImportError:
+    print("Missing dependency: PyYAML. Install with `pip install pyyaml`.", file=sys.stderr)
+    sys.exit(2)
+
+
+VAR_PATTERN = re.compile(r"\$\{([^}]+)\}")
+
+
+def find_project_root(start: Path) -> Path:
+    current = start.resolve()
+    for parent in [current, *current.parents]:
+        if (parent / ".asdlrc").exists():
+            return parent
+    return Path.cwd().resolve()
+
+
+def load_yaml(path: Path) -> dict:
+    with path.open("r", encoding="utf-8") as f:
+        data = yaml.safe_load(f)
+    if data is None:
+        return {}
+    if not isinstance(data, dict):
+        raise ValueError(f"Expected mapping at top-level: {path}")
+    return data
+
+
+def expand_vars(value: str, variables: dict[str, str]) -> str:
+    out = value
+    for _ in range(10):
+        updated = VAR_PATTERN.sub(lambda m: variables.get(m.group(1), m.group(0)), out)
+        if updated == out:
+            return out
+        out = updated
+    return out
+
+
+def load_lib_roots(project_root: Path) -> list[Path]:
+    rc = project_root / ".asdlrc"
+    default_roots = [project_root / "pdks", project_root / "libs_common", project_root / "libs"]
+    if not rc.exists():
+        return [p.resolve() for p in default_roots if p.exists()]
+
+    cfg = load_yaml(rc)
+    vars_map: dict[str, str] = dict(os.environ)
+    vars_map.setdefault("ASDLRC_DIR", str(project_root))
+
+    env_cfg = cfg.get("env", {})
+    if isinstance(env_cfg, dict):
+        for _ in range(10):
+            changed = False
+            for key, raw in env_cfg.items():
+                if not isinstance(raw, str):
+                    continue
+                expanded = expand_vars(raw, vars_map)
+                if vars_map.get(key) != expanded:
+                    vars_map[key] = expanded
+                    changed = True
+            if not changed:
+                break
+
+    roots: list[Path] = []
+    for raw in cfg.get("lib_roots", []):
+        if not isinstance(raw, str):
+            continue
+        expanded = expand_vars(raw, vars_map)
+        path = Path(expanded)
+        if not path.is_absolute():
+            path = (project_root / path).resolve()
+        if path.exists():
+            roots.append(path)
+
+    if roots:
+        return roots
+    return [p.resolve() for p in default_roots if p.exists()]
+
+
+def resolve_import_path(source_file: Path, import_target: str, lib_roots: list[Path]) -> Path:
+    as_path = Path(import_target)
+    candidates: list[Path] = []
+
+    if as_path.is_absolute() or import_target.startswith("./") or import_target.startswith("../"):
+        candidates.append((source_file.parent / as_path).resolve())
+    else:
+        for root in lib_roots:
+            candidates.append((root / as_path).resolve())
+
+    if as_path.suffix != ".asdl":
+        expanded = []
+        for candidate in candidates:
+            expanded.append(candidate)
+            expanded.append(candidate.with_suffix(".asdl"))
+        candidates = expanded
+
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    searched = "\n  - ".join(str(c) for c in candidates)
+    raise FileNotFoundError(f"Unable to resolve import '{import_target}'. Searched:\n  - {searched}")
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="List members exported by an ASDL import alias.")
+    parser.add_argument("file", help="Source ASDL file containing imports")
+    parser.add_argument("alias", help="Import alias to inspect (example: sim)")
+    parser.add_argument("--json", action="store_true", dest="as_json", help="Emit JSON")
+    args = parser.parse_args()
+
+    source_file = Path(args.file).resolve()
+    if not source_file.exists():
+        print(f"File not found: {source_file}", file=sys.stderr)
+        return 2
+
+    try:
+        source_data = load_yaml(source_file)
+    except Exception as exc:
+        print(f"Failed to parse {source_file}: {exc}", file=sys.stderr)
+        return 2
+
+    imports = source_data.get("imports", {})
+    if not isinstance(imports, dict):
+        print(f"Invalid imports block in {source_file}", file=sys.stderr)
+        return 2
+
+    if args.alias not in imports:
+        print(f"Alias '{args.alias}' not found in imports of {source_file}", file=sys.stderr)
+        return 1
+    import_target = imports[args.alias]
+    if not isinstance(import_target, str):
+        print(f"Alias '{args.alias}' import target must be string", file=sys.stderr)
+        return 2
+
+    project_root = find_project_root(source_file.parent)
+    lib_roots = load_lib_roots(project_root)
+
+    try:
+        resolved = resolve_import_path(source_file, import_target, lib_roots)
+        target_data = load_yaml(resolved)
+    except Exception as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
+
+    devices = sorted((target_data.get("devices") or {}).keys())
+    modules = sorted((target_data.get("modules") or {}).keys())
+
+    payload = {
+        "alias": args.alias,
+        "import": import_target,
+        "resolved_file": str(resolved),
+        "devices": devices,
+        "modules": modules,
+    }
+
+    if args.as_json:
+        print(json.dumps(payload, indent=2))
+        return 0
+
+    print(f"alias: {args.alias}")
+    print(f"import: {import_target}")
+    print(f"resolved_file: {resolved}")
+    print("devices:")
+    for name in devices:
+        print(f"  - {name}")
+    print("modules:")
+    for name in modules:
+        print(f"  - {name}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
