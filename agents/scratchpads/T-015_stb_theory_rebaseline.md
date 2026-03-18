@@ -50,7 +50,7 @@ These reduce algebraically to `T(s)=T_true(s)` exactly for this fixture.
   - `runs/exp_015_stb_theory/20260318T163124Z/metrics_middlebrook_theory.json`
   - `runs/exp_015_stb_theory/20260318T163124Z/curves_middlebrook_theory.csv`
 - Report:
-  - `docs/exp_015_stb_theory_2026-03-18.md`
+  - `libs/exp_015_stb_theory/notes/exp_015_stb_theory_2026-03-18.md`
 
 ## Next implementation step after theory lock
 

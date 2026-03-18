@@ -26,7 +26,7 @@
 - Implemented `ota_5t_op` wrapper that imports an OTA core from `libs/` (`tb/tb_ota_5t/ota_nmos.asdl`).
 - Implemented testbench imports spanning all roots: `gf180mcu.asdl` (pdks), `analoglib.asdl` and `simulation.xyce.asdl` (libs_common), plus local DUT wrapper.
 - Compile verification now passes for `libs/exp_011_imports/tb.asdl` on `sim.xyce`.
-- Added import-style guidance to `agents/instructions/snippets.md` and captured ambiguity notes in `docs/exp_011_imports_2026-03-01.md`.
+- Added import-style guidance to `agents/instructions/snippets.md` and captured ambiguity notes in `libs/exp_011_imports/notes/exp_011_imports_2026-03-01.md`.
 - Follow-up: made experiment self-contained by copying OTA source into `libs/exp_011_imports/ota_5t.asdl` and updating `tb.asdl` to use local imports only.
 - Follow-up: ran `xyce libs/exp_011_imports/tb.spice`; first run failed on unresolved symbolic source values, then passed after replacing `VDD`/`VCM` with numeric literals.
 
@@ -38,7 +38,7 @@
   - `libs/exp_011_imports/tb.log.json`
   - `libs/exp_011_imports/tb.spice.raw`
 - Added experiment report:
-  - `docs/exp_011_imports_2026-03-01.md`
+  - `libs/exp_011_imports/notes/exp_011_imports_2026-03-01.md`
 - Updated import guidance:
   - `agents/instructions/snippets.md`
 
