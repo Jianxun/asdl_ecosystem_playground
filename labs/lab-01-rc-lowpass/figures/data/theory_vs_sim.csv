@@ -1,3 +1,0 @@
-metric,theory,simulation,error_pct,tolerance,pass
-cutoff_hz,159155,159158,0.0020,+-5%,True
-tau_s,1e-06,9.99968e-07,-0.0032,+-10%,True
