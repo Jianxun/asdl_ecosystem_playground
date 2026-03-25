@@ -28,6 +28,12 @@ Build a teaching-first ASDL curriculum composed of tightly scoped circuit design
    - Capture friction points and missing tooling during authoring, simulation, analysis, and reporting.
    - Convert recurring friction into updates under `agents/instructions/`, scripts, and reusable patterns.
 
+5. **Standardize the lab data path**
+   - Default simulator backend for labs is `sim.ngspice`.
+   - Each lab normalizes simulator output to HDF5 using one common schema.
+   - Plot generation should read from HDF5 artifacts (single input path) rather than simulator-specific CSV boilerplate.
+   - Labs keep artifacts local (`labs/<lab-id>/artifacts/`) and may overwrite prior outputs by default.
+
 ## Quality bar for every lab
 
 - The learning objective is explicit and beginner-readable.

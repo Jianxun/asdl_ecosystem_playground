@@ -9,14 +9,14 @@
 - `agents/plans/`: active execution plan documents.
 - `agents/scripts/`: workflow scripts (`lint_tasks_state.py`, dispatcher helpers).
 - `agents/scratchpads/`: per-task notes (`T-00X_*.md`).
-- `libs/`: canonical experiment libraries (one experiment per subdirectory).
+- `labs/`: canonical teaching labs (one lab per subdirectory).
 - `libs_common/`: shared ASDL sources for common primitives/simulation helpers.
 - `pdks/`: PDK models and ASDL wrappers.
 - `examples/`: legacy/reference scratch assets.
 - `analysis/`: scripts for metric extraction and result analysis.
 - `analysis/tools/xyce/`: canonical Xyce post-processing tools (`raw_to_h5.py`, `format_xyce_op_csv.py`).
 - `docs/`: reports, templates, and workflow guidance.
-- `runs/`: generated experiment outputs (expected git-ignored).
+- `labs/<lab-id>/artifacts/`: generated lab outputs (expected git-ignored by extension).
 
 ## Quick Reference: Workflow
 - `agents/roles/architect.md`: project planning/contract authority.

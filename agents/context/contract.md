@@ -1,19 +1,19 @@
 # Contract
 
 ## Project overview
-ASDL Playground is an experimentation repository for exercising the ASDL authoring-to-simulation workflow end to end. The primary goal is to stress test language semantics, compiler/emission behavior, simulator integration, and result analysis workflows while producing reusable guidance for future agents.
+ASDL Playground is a lab-driven repository for exercising the ASDL authoring-to-simulation workflow end to end. The primary goal is to teach circuit concepts through reproducible labs while stress testing language semantics, compiler/emission behavior, simulator integration, and analysis workflows.
 
-The repository is intentionally split between infrastructure (`pdks/`, `libs_common/`, backend config) and experiment libraries (`libs/`). The `agents/` workflow is the canonical operating model for planning, execution, review, and context continuity.
+The repository is intentionally split between infrastructure (`pdks/`, `libs_common/`, backend config) and lab content (`labs/`). The `agents/` workflow is the canonical operating model for planning, execution, review, and context continuity.
 
 ## System boundaries / components
 - `agents/`: canonical agent workflow (roles, context, scripts, scratchpads, logs).
-- `libs/`: experiment libraries; one experiment per subdirectory.
+- `labs/`: teaching labs; one lab per subdirectory.
 - `libs_common/`: shared reusable ASDL blocks (for example sources and simulation directives).
-- `pdks/`: PDK wrappers and simulator model assets used by experiments.
+- `pdks/`: PDK wrappers and simulator model assets used by labs.
 - `examples/`: legacy/reference assets (config/docs/scratch), not the primary authoring location.
 - `analysis/`: post-processing scripts and metric extraction.
-- `docs/`: experiment reports and playbooks.
-- `runs/`: generated outputs (netlists/logs/waveforms/metrics), git-ignored.
+- `docs/`: project-level reports and playbooks.
+- `labs/<lab-id>/artifacts/`: generated per-lab outputs (netlists/logs/raw/HDF5), git-ignored by extension patterns.
 
 ## Interfaces & data contracts
 - Project config is driven by repo-root `.asdlrc`.
@@ -29,9 +29,9 @@ The repository is intentionally split between infrastructure (`pdks/`, `libs_com
 
 ## Invariants
 - `agents/` workflow is canonical for project execution and handoff.
-- New experiment source lives in `libs/`; do not create new canonical experiment source under `examples/`.
+- New lab source lives in `labs/`; do not create new canonical lab source under `examples/`.
 - `pdks/` and `libs_common/` are shared infrastructure and should remain stable and reusable.
-- Generated outputs MUST go to `runs/` (or other explicitly generated paths), not under `libs/`.
+- Generated outputs for labs SHOULD go to `labs/<lab-id>/artifacts/` to keep labs self-contained.
 - Task status MUST live only in `agents/context/tasks.yaml`.
 - Architect owns task cards and project status; Executor/Reviewer only update permitted state fields.
 

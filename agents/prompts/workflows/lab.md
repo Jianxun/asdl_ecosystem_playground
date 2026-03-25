@@ -18,6 +18,7 @@ Every lab must satisfy these requirements:
 - It compares theory vs simulation with explicit tolerance/margin.
 - It demonstrates an important circuit property or design tradeoff.
 - It is reproducible from repo root using explicit commands and paths.
+- It normalizes simulator outputs to HDF5 with the project's canonical schema.
 - It records friction points and proposes tooling/workflow improvements.
 
 ## Canonical naming and paths
@@ -25,7 +26,8 @@ Every lab must satisfy these requirements:
 - Use the term **lab** (not experiment/exp) for teaching episodes.
 - Lab id format: `lab-XX-<slug>` (example: `lab-01-rc-lowpass`).
 - Source assets live under `labs/<lab-id>/`.
-- Generated run artifacts live under `runs/<lab-id>/<run_id>/`.
+- Generated artifacts live under `labs/<lab-id>/artifacts/`.
+- Labs currently use a single overwriteable baseline artifact set (no run-id management required).
 - Keep generated figures under `labs/<lab-id>/figures/` and ensure they are script-generated.
 
 ## Required deliverables (normative)
@@ -33,8 +35,8 @@ Every lab must satisfy these requirements:
 Each lab must include all items below:
 
 1. ASDL source files for the circuit/testbench.
-2. Post-processing script(s) for simulator outputs.
-3. Plot-generation script(s) for figures used in the write-up.
+2. Raw-to-HDF5 normalization step using canonical schema.
+3. Plot-generation script(s) that read HDF5 input paths.
 4. Generated figure files referenced by the write-up.
 5. One markdown instruction/write-up document (`lab.md`) containing theory, setup, results, and conclusions.
 
@@ -48,9 +50,13 @@ labs/<lab-id>/
     tb.asdl
     dut.asdl                # optional
   scripts/
-    postprocess.py
-    plot.py
+    plot_from_hdf5.py
     checks.py               # optional; quantitative assertions
+  artifacts/
+    tb.spice
+    tb.raw
+    tb.hdf5
+    ngspice.log
   figures/
     fig1_*.png
     fig2_*.png
@@ -90,8 +96,8 @@ simulations:
 deliverables:
   - lab.md
   - asdl/tb.asdl
-  - scripts/postprocess.py
-  - scripts/plot.py
+  - scripts/plot_from_hdf5.py
+  - artifacts/tb.hdf5
   - figures/fig1_<name>.png
 ```
 
@@ -127,8 +133,9 @@ Use this exact section order:
 Validation is mandatory. A lab is incomplete until all are true:
 
 - Compile succeeds with explicit `asdlc` command.
-- Simulation succeeds with explicit `xyce` command.
-- Post-processing and plotting scripts run successfully.
+- Simulation succeeds with explicit `ngspice` command.
+- HDF5 normalization succeeds from generated RAW output.
+- Plot script runs from HDF5 input path successfully.
 - Figures in `labs/<lab-id>/figures/` match the latest run outputs.
 - At least one quantitative theory-vs-simulation check meets stated tolerance.
 
