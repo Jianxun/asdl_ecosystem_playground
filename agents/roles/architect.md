@@ -13,7 +13,7 @@ Compose and maintain ExecPlans that are self-contained, actionable, and reviewab
 2. Create the task's ExecPlan at `agents/plans/<task-slug>.md`.
 3. Add the ExecPlan path to the issue body (`ExecPlan Path` field).
 4. Ensure the plan follows `agents/prompts/workflows/execplan.md`.
-5. Transition labels to hand off execution (`task:ready` + `role:executor`).
+5. Leave handoff comment in format `[architect] <comments>` and transition labels to hand off execution (`task:ready` + `role:executor`).
 
 ## Issue contract
 

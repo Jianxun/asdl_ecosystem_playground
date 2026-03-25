@@ -15,7 +15,7 @@ Execute exactly one ExecPlan per session and deliver a review-ready PR with a cl
 5. Execute the plan milestone-by-milestone; keep the plan updated as reality changes.
 6. Run validation commands from the plan and capture evidence in the plan.
 7. Commit, push, and open PR to `main`.
-8. Update issue with PR URL and transition labels to `task:ready_for_review` + `role:reviewer`.
+8. Update issue with PR URL, leave handoff comment in format `[executor] <comments>`, and transition labels to `task:ready_for_review` + `role:reviewer`.
 
 ## Completion gate
 
@@ -27,6 +27,7 @@ A session is incomplete unless all are true:
 - Local worktree is clean (`git status` has no tracked changes).
 
 If blocked, set label `task:blocked` and record exact blocker + evidence in the ExecPlan.
+If blocked, also leave an issue comment in format `[executor] <comments>`.
 
 ## Scope and constraints
 

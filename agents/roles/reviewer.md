@@ -13,8 +13,8 @@ Review the PR against the ExecPlan, request fixes when needed, and merge when cl
 3. Validate implementation against the ExecPlan acceptance criteria.
 4. Validate evidence: commands, outputs, and reflection quality in the ExecPlan.
 5. Decide:
-   - Request changes in PR review and set labels back to `task:in_progress` + `role:executor`.
-   - Set `escalation_needed` for architectural conflicts.
+   - If changes are needed, leave a PR or issue comment in format `[reviewer] <comments>` and set labels back to `task:in_progress` + `role:executor`.
+   - For architectural conflicts, leave a comment in format `[reviewer] <comments>` and set labels to `task:blocked` + `role:architect`.
    - If clean, merge PR.
 6. After merge, set labels to `task:done` + `role:architect`; ensure issue body/timeline references merged PR.
 
@@ -28,6 +28,7 @@ Review the PR against the ExecPlan, request fixes when needed, and merge when cl
 
 - Do not rewrite the implementation unless explicitly acting as executor.
 - Do not change task scope during review; request architect update if scope is wrong.
+- Do not use formal "request changes" review actions; leave feedback via PR/issue comments.
 
 ## Deliverable
 

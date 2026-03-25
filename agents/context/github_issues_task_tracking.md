@@ -39,6 +39,13 @@ Support labels:
    - Merges PR: set `task:done` + `role:architect`.
 6. If blocked at any phase: set `task:blocked` and capture blocker details in issue + ExecPlan.
 
+## Feedback protocol
+
+- Agents leave feedback as PR/Issue comments, not formal "request changes" review actions.
+- Every feedback comment must start with role prefix format: `[<role>] <comments>`.
+- Canonical role prefixes: `[architect]`, `[executor]`, `[reviewer]`.
+- When requesting rework, include explicit required changes and expected state-label transition in the same comment.
+
 ## Query examples
 
 Run from repo root:
