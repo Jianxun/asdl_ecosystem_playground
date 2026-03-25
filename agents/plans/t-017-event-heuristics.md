@@ -153,7 +153,7 @@ Acceptance requires:
   - `./agents/scripts/run_opencode_ingestion.sh backfill` succeeded (`checked=13 ok=13 failed=0 missing_events=0 missing_raw=0`)
   - `python3 agents/tools/opencode_session_pipeline/bin/validate_events.py --project playground --raw-root archive/raw/opencode --events-root archive/derived/events/opencode --index-root archive/index` succeeded
   - report: `archive/index/opencode/playground/events_validation.json`
-- PR URL: TBD (executor fills at review-ready handoff).
+- PR URL: https://github.com/Jianxun/asdl_ecosystem_playground/pull/5
 
 ## Interfaces and Dependencies
 
@@ -211,7 +211,7 @@ Acceptance requires:
   - `archive/index/opencode/playground/events_validation.json`
 
 ### Next Steps
-- Open PR, then monitor reviewer feedback for additional signature mappings worth promoting in a follow-up task.
+- Monitor reviewer feedback and expand signature mappings in follow-up tasks only when repeated failure families appear across multiple sessions.
 
 ---
 
