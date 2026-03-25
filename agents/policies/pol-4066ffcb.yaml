@@ -1,0 +1,49 @@
+id: pol-4066ffcb
+content: "Commit often with small coherent changes; keep working tree clean between tasks; map one PR to one task objective."
+detail: |
+  ## Intent
+  Keep the repository state clean and reviewable while iterating on labs.
+
+  ## Why
+  - Large uncommitted batches increase drift and make debugging harder.
+  - Small commits preserve intent and simplify rollback/review.
+  - A clean tree between tasks prevents cross-lab contamination.
+
+  ## Rules
+  - Commit often with small, coherent changes.
+  - Before starting a new task, ensure working tree is clean or intentionally scoped.
+  - Do not mix unrelated lab changes in one commit.
+  - Keep generated run artifacts out of commits unless explicitly requested.
+  - Prefer small PRs mapped to one task/lab milestone.
+  - Merge and prune promptly after review to avoid long-lived drift branches.
+
+  ## Practical Workflow
+  1. Finish one logical change.
+  2. Run minimal verification for that change.
+  3. Commit with message explaining why.
+  4. Open/update a focused PR when scope is reviewable.
+  5. Merge promptly when approved; prune branch.
+  6. Confirm clean tree before switching context.
+
+  ## PR Size Guidance
+  - Aim for one PR per coherent objective (one lab, one tooling feature, one instruction update).
+  - If a branch grows across objectives, split into stacked PRs before adding more scope.
+
+source:
+  origin: principles
+  original_id: P-009
+  track: 1
+
+triggers:
+  - field: role
+    pattern: "executor"
+
+confidence: 1.0
+status: active
+
+stats:
+  injection_count: 0
+  success_count: 0
+  failure_count: 0
+
+created: 2026-03-25

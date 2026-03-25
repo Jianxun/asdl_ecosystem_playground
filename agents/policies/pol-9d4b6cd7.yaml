@@ -1,0 +1,36 @@
+id: pol-9d4b6cd7
+content: "Treat simulator exit code as the primary pass/fail signal; repeated model warnings are non-fatal unless exit code is non-zero."
+detail: |
+  ## Intent
+  Use the simulator process exit code as the authoritative pass/fail indicator, not the
+  presence of warning messages in the log.
+
+  ## Why
+  - Simulators (especially with PDK models like GF180) emit many non-fatal warnings by design.
+  - Treating all warnings as failures leads to false negatives and unnecessary debugging.
+
+  ## Rules
+  - Check simulator exit code: 0 = success, non-zero = failure.
+  - Log warnings for visibility but do not block on them unless they are accompanied by
+    a non-zero exit.
+  - Repeated MODEL_BINNING, pbswgd clamp, and similar PDK model-card warnings are expected
+    and non-fatal.
+
+source:
+  origin: lessons
+  original_id: "[T-010][executor]"
+  track: 2
+
+triggers:
+  - field: phases
+    pattern: "simulate"
+
+confidence: 0.9
+status: active
+
+stats:
+  injection_count: 0
+  success_count: 0
+  failure_count: 0
+
+created: 2026-03-25

@@ -1,0 +1,43 @@
+id: pol-49a45c2f
+content: "Make measurement orientation and loop-gain formulas explicit — document probe polarity, signal names, and exact formula used."
+detail: |
+  ## Intent
+  Make measurement orientation and loop-gain formulas explicit to avoid silent sign errors.
+
+  ## Why
+  - Small orientation changes can invert phase or alter loop-gain expressions.
+  - Reproducibility depends on stable conventions.
+
+  ## Rules
+  - Document probe/source polarity and current direction.
+  - Document exact formula used for derived quantities (e.g., loop gain from node voltages).
+  - Freeze exactly one canonical formula/orientation set per analysis mode.
+  - Include low-frequency sanity checks in analysis output (expected sign, expected magnitude order).
+  - Include reciprocal/consistency checks when ratios can be inverted by orientation.
+  - If changing probe wiring, update formula documentation in same change.
+
+  ## Required Metadata in Results
+  - Formula string used.
+  - Signal names used in formula.
+  - Orientation assumptions.
+
+source:
+  origin: principles
+  original_id: P-005
+  track: 1
+
+triggers:
+  - field: phases
+    pattern: "analyze|plot"
+  - field: circuit_type
+    pattern: "ota|amplifier|feedback|loop"
+
+confidence: 1.0
+status: active
+
+stats:
+  injection_count: 0
+  success_count: 0
+  failure_count: 0
+
+created: 2026-03-25

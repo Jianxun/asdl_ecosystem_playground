@@ -1,0 +1,37 @@
+id: pol-eb68439c
+content: "ASDL module variables substitute into source parameters only when braced — use {VDD} not VDD for substitution to work."
+detail: |
+  ## Intent
+  Use braced variable references in ASDL source parameter values to ensure substitution occurs.
+
+  ## Why
+  - `modules.tb.variables` values substitute correctly when referenced as `{VDD}` or `{VCM}`.
+  - Unbraced symbols like `VDD` are emitted literally into the netlist and not substituted,
+    producing incorrect simulation setup without a compile error.
+
+  ## Rule
+  Always use `{VARNAME}` syntax when referencing module variables in instance parameters:
+  ```yaml
+  instances:
+    vdd: ana.vdc dc={VDD}   # correct — substituted
+    vss: ana.vdc dc=VDD     # wrong — emitted literally
+  ```
+
+source:
+  origin: lessons
+  original_id: "[T-011][executor]"
+  track: 2
+
+triggers:
+  - field: phases
+    pattern: "author|compile|design"
+
+confidence: 0.95
+status: active
+
+stats:
+  injection_count: 0
+  success_count: 0
+  failure_count: 0
+
+created: 2026-03-25

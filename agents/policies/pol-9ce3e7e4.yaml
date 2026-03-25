@@ -1,0 +1,42 @@
+id: pol-9ce3e7e4
+content: "Each lab must include a compact, repeatable analysis recipe: run commands, analysis commands, key formulas, and expected numerical checkpoints."
+detail: |
+  ## Intent
+  Each lab should include a compact, repeatable analysis recipe for future agents.
+
+  ## Why
+  - Prevents loss of context between sessions.
+  - Makes "rerun + verify" a one-command workflow.
+
+  ## Rules
+  - Store a short summary in lab folder with:
+    - run command(s)
+    - analysis command(s)
+    - key formulas
+    - expected numerical checkpoints
+  - Keep path references explicit and run-relative.
+  - Include at least one machine-readable metrics artifact per run.
+
+  ## Recommended Artifacts
+  - `metrics_*.json`
+  - `plot_*.png`
+  - `lab.md` with theory-simulation comparison section
+
+source:
+  origin: principles
+  original_id: P-007
+  track: 1
+
+triggers:
+  - field: phases
+    pattern: "lab-closeout|analyze"
+
+confidence: 1.0
+status: active
+
+stats:
+  injection_count: 0
+  success_count: 0
+  failure_count: 0
+
+created: 2026-03-25

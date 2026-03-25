@@ -1,30 +1,26 @@
-# Agent Instructions
+# Agent Instructions — Hydration Packets
 
-These files are the hydration pack for agents working in ASDL Playground.
+Modular context packets for agent sessions. Inject the relevant subset based on task type.
 
-## Read order
+## Packets
 
-1. `playbook.md` (normative execution policy)
-2. `workflow.md` (experiment lifecycle and scope control)
-3. `quickstart.md` (fast environment + run checklist)
-4. `debugging.md` (failure triage)
-5. `snippets.md` (copy-ready examples)
-6. `tooling.md` (tool reference)
-7. `experiment_template.md` (report schema)
-8. `glossary.md` (terms)
+| File | Purpose | Inject when |
+|---|---|---|
+| `packet-lab-workflow.md` | Normative lab execution policy and run loop | Starting any lab task |
+| `packet-environment.md` | Environment verification and config pointers | New session or after env changes |
+| `packet-debugging.md` | Failure triage for compile/simulate/post-process | Any failure occurs |
+| `packet-tooling.md` | Tool reference and command syntax | Command lookup needed |
+| `packet-snippets.md` | Copy-ready ASDL and command patterns | Authoring a new testbench |
+| `packet-glossary.md` | Key term definitions | Clarification needed |
 
-## What is normative vs reference
+## Typical injection sets by role
 
-- Normative policy: `playbook.md`, `workflow.md`
-- Operational guidance: `quickstart.md`, `debugging.md`
-- Reference material: `snippets.md`, `tooling.md`, `experiment_template.md`, `glossary.md`
+- **Executor (lab task)**: `packet-lab-workflow` + `packet-environment` + `packet-snippets`
+- **Executor (debugging)**: `packet-debugging` + `packet-tooling`
+- **Architect (planning)**: `packet-lab-workflow` (for scope reference)
+- **Reviewer**: none required by default
 
-## Purpose
+## Relationship to policies and lessons
 
-- Keep agent behavior consistent across sessions.
-- Reduce startup friction for ASDL author -> compile -> simulate -> analyze loops.
-- Capture ergonomics findings that inform next-generation orchestration (separate from legacy `asdl_ecosystem/simorc`).
-
-## Related workflow prompts
-
-- Session ingestion workflow: `agents/prompts/workflows/session_ingestion.md`
+Packets are operational guidance. For behavioral rules and experiential knowledge,
+see `agents/policies/` and `agents/lessons/`.

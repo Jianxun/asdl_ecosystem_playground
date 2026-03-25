@@ -1,9 +1,0 @@
-schema_version: 1
-
-archive:
-  - {T-010: {completed_on: 2026-03-24, owner: Executor, pr: 1}}
-  - {T-011: {completed_on: null, owner: Executor, pr: 2}}
-  - {T-012: {completed_on: null, owner: Executor, pr: null}}
-  - {T-013: {completed_on: null, owner: Executor, pr: null}}
-  - {T-014: {completed_on: null, owner: Executor, pr: null}}
-  - {T-015: {completed_on: null, owner: Architect, pr: null}}

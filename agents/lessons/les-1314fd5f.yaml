@@ -1,0 +1,45 @@
+id: les-1314fd5f
+content: "For `history.py`, global flags (`--project`, `--events-root`) must appear before subcommands, not after."
+detail: |
+  ## Condition
+  Using `agents/tools/opencode_session_pipeline/bin/history.py` for session telemetry queries.
+
+  ## Rule
+  Place all global flags before the subcommand:
+  ```bash
+  # Correct
+  python3 history.py --project playground timeline --session-id ses_xxx
+
+  # Wrong — global flag after subcommand is silently ignored or errors
+  python3 history.py timeline --project playground --session-id ses_xxx
+  ```
+
+  ## Root Cause
+  `history.py` uses argparse with top-level global arguments parsed before subcommand
+  dispatch. This is a CLI design quirk, not a bug.
+
+expires_when:
+  condition: "history.py CLI is refactored to accept global flags in any position (e.g., using a different arg parsing library)"
+  watch: "agents/tools/opencode_session_pipeline/bin/history.py"
+  issue: null
+
+source:
+  origin: lessons
+  original_id: "pending-additions"
+  track: 1
+
+triggers:
+  - field: tools
+    pattern: "history.py|session_pipeline"
+  - field: phases
+    pattern: "telemetry|analyze"
+
+confidence: 0.95
+status: active
+
+stats:
+  injection_count: 0
+  success_count: 0
+  failure_count: 0
+
+created: 2026-03-25

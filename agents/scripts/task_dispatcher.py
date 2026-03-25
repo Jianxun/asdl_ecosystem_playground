@@ -18,6 +18,7 @@ DEFAULT_PROMPT = "analyze the structure of the codebase"
 MAX_REVIEW_ROUNDS = 3
 IMESSAGE_SCRIPT = os.path.join(os.path.dirname(__file__), "send_imessage.sh")
 LOGS_DIR = Path("agents/log")
+WORKTREES_REL = Path("agents/worktrees")
 
 TASK_LABELS = {
     "task:ready",
@@ -100,7 +101,7 @@ def render_line(line: str) -> tuple[str, str, str | None, dict[str, Any] | None]
     return formatted, tag, agent_text, payload
 
 
-def open_task_log(issue_id: str, role: str, command: Iterable[str]) -> tuple[TextIO, str]:
+def open_task_log(issue_id: str, role: str, command: Iterable[str], cwd: str | None) -> tuple[TextIO, str]:
     LOGS_DIR.mkdir(parents=True, exist_ok=True)
     path = LOGS_DIR / f"issue-{issue_id}.log.json"
     handle = path.open("a", encoding="utf-8")
@@ -114,7 +115,7 @@ def open_task_log(issue_id: str, role: str, command: Iterable[str]) -> tuple[Tex
                 "role": role,
                 "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
                 "command": list(command),
-                "cwd": os.getcwd(),
+                "cwd": cwd or os.getcwd(),
             },
             ensure_ascii=True,
         )
@@ -169,6 +170,7 @@ def stream_process(
     prefix: str | None = None,
     issue_id: str | None = None,
     role: str | None = None,
+    cwd: str | None = None,
 ) -> tuple[int, str | None]:
     last_agent_message: str | None = None
     log_handle: TextIO | None = None
@@ -176,7 +178,7 @@ def stream_process(
     command_list = list(command)
 
     if issue_id and role:
-        log_handle, session_id = open_task_log(issue_id, role, command_list)
+        log_handle, session_id = open_task_log(issue_id, role, command_list, cwd)
 
     try:
         proc = subprocess.Popen(
@@ -185,6 +187,7 @@ def stream_process(
             stderr=subprocess.PIPE,
             text=True,
             bufsize=1,
+            cwd=cwd,
         )
     except FileNotFoundError as exc:
         print(f"Required binary not found: {exc}. Ensure codex is installed.", file=sys.stderr)
@@ -248,6 +251,28 @@ def run_gh_json(args: list[str]) -> Any:
     return json.loads(proc.stdout)
 
 
+def repo_root() -> Path:
+    proc = subprocess.run(
+        ["git", "rev-parse", "--show-toplevel"],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    return Path(proc.stdout.strip()).resolve()
+
+
+def ensure_issue_worktree(issue_number: int) -> Path:
+    root = repo_root()
+    worktree_root = root / WORKTREES_REL
+    worktree_path = worktree_root / f"issue-{issue_number}"
+    if worktree_path.exists():
+        return worktree_path
+
+    worktree_root.mkdir(parents=True, exist_ok=True)
+    subprocess.run(["git", "worktree", "add", str(worktree_path), "main"], check=True, cwd=str(root))
+    return worktree_path
+
+
 def issue_info(issue_number: int) -> dict[str, Any]:
     return run_gh_json(["issue", "view", str(issue_number), "--json", "number,title,body,labels,url"])
 
@@ -291,21 +316,21 @@ def list_ready_issues() -> list[int]:
     return [int(x) for x in out.splitlines() if x.strip()]
 
 
-def build_executor_prompt(issue_number: int, feedback: str | None = None) -> str:
+def build_executor_prompt(issue_number: int, repo_path: str, feedback: str | None = None) -> str:
     info = issue_info(issue_number)
     plan_path = extract_execplan_path(info.get("body", "")) or "<missing ExecPlan Path in issue body>"
     base = (
         "You are the executor agent. Read and follow your role definition "
         "'agents/roles/executor.md'. "
         f"Work on GitHub issue #{issue_number}. Execute plan '{plan_path}'. "
-        f"Issue URL: {info.get('url')}. Repo path: {os.getcwd()}."
+        f"Issue URL: {info.get('url')}. Repo path: {repo_path}."
     )
     if feedback:
         base = f"{base}\nReviewer feedback:\n{feedback}"
     return base
 
 
-def build_reviewer_prompt(issue_number: int, summary: str | None) -> str:
+def build_reviewer_prompt(issue_number: int, repo_path: str, summary: str | None) -> str:
     info = issue_info(issue_number)
     plan_path = extract_execplan_path(info.get("body", "")) or "<missing ExecPlan Path in issue body>"
     summary_text = summary or "No executor summary captured."
@@ -313,7 +338,7 @@ def build_reviewer_prompt(issue_number: int, summary: str | None) -> str:
         "You are the reviewer agent. Read and follow your role definition "
         "'agents/roles/reviewer.md'. "
         f"Review GitHub issue #{issue_number}. Use plan '{plan_path}'. "
-        f"Issue URL: {info.get('url')}. Repo path: {os.getcwd()}.\n"
+        f"Issue URL: {info.get('url')}. Repo path: {repo_path}.\n"
         "Here are the summaries from the executor agent:\n"
         f"{summary_text}"
     )
@@ -323,13 +348,14 @@ def run_codex(
     prompt: str,
     issue_id: str | None = None,
     role: str | None = None,
+    cwd: str | None = None,
 ) -> tuple[int, str | None]:
     command = build_command(prompt)
     print(f"Running: {' '.join(command)}")
     prefix = None
     if issue_id and role:
         prefix = f"[issue-{issue_id}][{role}]"
-    return stream_process(command, prefix=prefix, issue_id=issue_id, role=role)
+    return stream_process(command, prefix=prefix, issue_id=issue_id, role=role, cwd=cwd)
 
 
 def send_imessage(role: str, issue_number: int, labels: set[str], response: str | None) -> None:
@@ -345,14 +371,18 @@ def send_imessage(role: str, issue_number: int, labels: set[str], response: str 
 def run_scheduler(issue_numbers: list[int], max_rounds: int) -> int:
     for issue_number in issue_numbers:
         print(f"Starting issue #{issue_number}")
+        issue_worktree = ensure_issue_worktree(issue_number)
+        issue_cwd = str(issue_worktree)
+        print(f"Using worktree: {issue_cwd}")
         rounds = 0
         reviewer_feedback: str | None = None
         while rounds < max_rounds:
-            executor_prompt = build_executor_prompt(issue_number, feedback=reviewer_feedback)
+            executor_prompt = build_executor_prompt(issue_number, repo_path=issue_cwd, feedback=reviewer_feedback)
             exit_code, executor_summary = run_codex(
                 executor_prompt,
                 issue_id=str(issue_number),
                 role="executor",
+                cwd=issue_cwd,
             )
             if exit_code != 0:
                 print(f"Interrupted: executor exited with code {exit_code}", file=sys.stderr)
@@ -367,11 +397,12 @@ def run_scheduler(issue_numbers: list[int], max_rounds: int) -> int:
                 )
                 return 1
 
-            reviewer_prompt = build_reviewer_prompt(issue_number, executor_summary)
+            reviewer_prompt = build_reviewer_prompt(issue_number, repo_path=issue_cwd, summary=executor_summary)
             exit_code, reviewer_summary = run_codex(
                 reviewer_prompt,
                 issue_id=str(issue_number),
                 role="reviewer",
+                cwd=issue_cwd,
             )
             if exit_code != 0:
                 print(f"Interrupted: reviewer exited with code {exit_code}", file=sys.stderr)

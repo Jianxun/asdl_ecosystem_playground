@@ -32,7 +32,7 @@ Build a teaching-first ASDL curriculum composed of tightly scoped circuit design
    - Default simulator backend for labs is `sim.ngspice`.
    - Each lab normalizes simulator output to HDF5 using one common schema.
    - Plot generation should read from HDF5 artifacts (single input path) rather than simulator-specific CSV boilerplate.
-   - Labs keep artifacts local (`labs/<lab-id>/artifacts/`) and may overwrite prior outputs by default.
+   - Lab builds live in `labs/builds/<lab-id>/`; artifacts (simulation outputs) go to `labs/builds/<lab-id>/artifacts/` and may overwrite prior outputs by default.
 
 ## Quality bar for every lab
 

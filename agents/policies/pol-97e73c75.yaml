@@ -1,0 +1,34 @@
+id: pol-97e73c75
+content: "When scope ambiguity is explicitly resolved by the user in PR discussion, record that approval in a review comment before proceeding with closeout."
+detail: |
+  ## Intent
+  Preserve evidence of user scope decisions in the PR audit trail so future sessions
+  can understand why a boundary was drawn a certain way.
+
+  ## Why
+  - Scope decisions made verbally in chat are easily lost between sessions.
+  - Recording approval in the PR creates a durable, reviewable record tied to the change.
+
+  ## Rule
+  When a user explicitly approves an out-of-scope change or resolves an ambiguity mid-PR,
+  leave a comment in the PR in the format:
+  `[reviewer] Scope clarification confirmed by user: <summary>. Proceeding with closeout.`
+
+source:
+  origin: lessons
+  original_id: "[T-010][reviewer]"
+  track: 1
+
+triggers:
+  - field: role
+    pattern: "reviewer"
+
+confidence: 0.85
+status: active
+
+stats:
+  injection_count: 0
+  success_count: 0
+  failure_count: 0
+
+created: 2026-03-25

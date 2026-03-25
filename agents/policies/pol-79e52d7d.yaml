@@ -1,0 +1,43 @@
+id: pol-79e52d7d
+content: "Always state theoretical expectations alongside simulation results and verify agreement within explicit tolerances."
+detail: |
+  ## Intent
+  Always correlate analytical expectations with simulation results, and validate workflows
+  on deterministic circuits before scaling to complex designs.
+
+  ## Why
+  - Prevents tool-flow mistakes from being misread as circuit behavior.
+  - Makes debugging explainable and faster.
+  - Creates objective pass/fail checkpoints for method validation.
+
+  ## Rules
+  - For every key metric, state the theoretical expectation and simulation value side by side.
+  - Prefer deterministic reference fixtures (idealized or reduced-order models) before applying
+    methods to real circuits.
+  - Introduce complexity incrementally and keep each step explainable.
+  - When mismatch appears, isolate root cause: equation/sign convention, probing/observability,
+    model/circuit non-ideality, or simulator/setup artifact.
+
+  ## Required Reporting Pattern
+  - Include formulas used for expected values.
+  - Include measured values and percent error.
+  - Include a brief interpretation of whether mismatch is acceptable and why.
+
+source:
+  origin: principles
+  original_id: P-001
+  track: 1
+
+triggers:
+  - field: phases
+    pattern: "analyze|lab-closeout|validate"
+
+confidence: 1.0
+status: active
+
+stats:
+  injection_count: 0
+  success_count: 0
+  failure_count: 0
+
+created: 2026-03-25

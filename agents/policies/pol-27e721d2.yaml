@@ -1,0 +1,38 @@
+id: pol-27e721d2
+content: "Before validating complex methods on real circuits, first validate on a deterministic reference with known closed-form behavior."
+detail: |
+  ## Intent
+  Before validating complex extraction methods on real circuits, validate on a deterministic
+  reference with known closed-form behavior.
+
+  ## Why
+  - Separates method errors from circuit-model complexity.
+  - Provides a reliable baseline for numerical accuracy checks.
+
+  ## Rules
+  - Build a minimal synthetic fixture first (e.g., ideal `gm`, `ro`, known capacitors).
+  - Compare extracted metrics against theory (e.g., DC gain, pole, UGB).
+  - Require agreement within a predefined tolerance before applying method to larger designs.
+
+  ## Recommended Tolerance
+  - Start with <= 2% relative error for gain-bandwidth and pole checks.
+  - Tighten as fixture complexity is reduced.
+
+source:
+  origin: principles
+  original_id: P-004
+  track: 1
+
+triggers:
+  - field: phases
+    pattern: "validate|analyze"
+
+confidence: 1.0
+status: active
+
+stats:
+  injection_count: 0
+  success_count: 0
+  failure_count: 0
+
+created: 2026-03-25

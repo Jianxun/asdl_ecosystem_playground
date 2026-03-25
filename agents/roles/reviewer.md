@@ -17,6 +17,8 @@ Review the PR against the ExecPlan, request fixes when needed, and merge when cl
    - For architectural conflicts, leave a comment in format `[reviewer] <comments>` and set labels to `task:blocked` + `role:architect`.
    - If clean, merge PR.
 6. After merge, set labels to `task:done` + `role:architect`; ensure issue body/timeline references merged PR.
+7. If the merged PR fully addresses the issue objective, close the issue and leave a closeout comment in format `[reviewer] <comments>`.
+8. If work remains, keep the issue open, update labels/state for remaining work, and leave a comment in format `[reviewer] <comments>` describing what is still pending.
 
 ## Quality bar
 

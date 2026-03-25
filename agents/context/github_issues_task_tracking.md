@@ -7,6 +7,12 @@ This document is the canonical task-state model for Architect/Executor/Reviewer 
 - Task state lives in GitHub Issue labels, not repo-local YAML files.
 - Every active task issue must include one `ExecPlan Path` value pointing to `agents/plans/<task-slug>.md`.
 
+## Execution isolation
+
+- Executor runs must use dedicated git worktrees so parallel agents do not share one working directory.
+- Recommended pattern: `agents/worktrees/issue-<issue-number>/`.
+- Branch creation, implementation, and validation for an issue happen inside that issue worktree.
+
 ## Canonical labels
 
 Task state labels (exactly one at a time):
@@ -36,7 +42,7 @@ Support labels:
 4. Reviewer starts review and sets `task:review_in_progress` + `role:reviewer`.
 5. Reviewer either:
    - Requests changes: set `task:in_progress` + `role:executor`.
-   - Merges PR: set `task:done` + `role:architect`.
+   - Merges PR: set `task:done` + `role:architect`; close the issue if objective is fully addressed.
 6. If blocked at any phase: set `task:blocked` and capture blocker details in issue + ExecPlan.
 
 ## Feedback protocol

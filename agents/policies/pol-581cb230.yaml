@@ -1,0 +1,36 @@
+id: pol-581cb230
+content: "Run a compile-only sanity pass before emitting run folders or starting simulation setup to catch ASDL errors early."
+detail: |
+  ## Intent
+  Catch ASDL symbol and syntax errors as early as possible in the workflow, before
+  artifact emission or simulation infrastructure is set up.
+
+  ## Why
+  - Compile errors discovered mid-simulation setup waste time and create partial artifact state.
+  - `asdlc` without output flag is fast and catches symbol, import, and type errors immediately.
+
+  ## Rule
+  Always run a compile-only check first:
+  ```bash
+  asdlc netlist labs/<lab-id>/asdl/tb.asdl --backend sim.ngspice
+  ```
+  Only proceed to artifact emission once this passes cleanly.
+
+source:
+  origin: lessons
+  original_id: "[T-010][executor]"
+  track: 2
+
+triggers:
+  - field: phases
+    pattern: "compile|simulate"
+
+confidence: 0.9
+status: active
+
+stats:
+  injection_count: 0
+  success_count: 0
+  failure_count: 0
+
+created: 2026-03-25

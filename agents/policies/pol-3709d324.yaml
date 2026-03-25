@@ -1,0 +1,37 @@
+id: pol-3709d324
+content: "Rank tool_failure telemetry events by diagnostic payload quality before promoting to lessons — not all failures are equally actionable."
+detail: |
+  ## Intent
+  Filter and prioritize failure events in telemetry normalization based on how much
+  actionable diagnostic information they carry.
+
+  ## Why
+  - Low-quality failures (e.g., file-not-found reads, empty stderr) create noise and
+    dilute attention from high-signal failures.
+  - Promoting every tool_failure equally leads to lesson store pollution.
+
+  ## Rules
+  - Rank failure actionability by: non-zero exit code > non-empty stderr > exception message > empty.
+  - Deprioritize read failures and other tool calls where failure is expected or inconsequential.
+  - Only promote failures with clear diagnostic payload and a correctable root cause.
+
+source:
+  origin: lessons
+  original_id: "[T-016][review]"
+  track: 1
+
+triggers:
+  - field: phases
+    pattern: "telemetry|normalize|gc"
+  - field: role
+    pattern: "architect"
+
+confidence: 0.8
+status: active
+
+stats:
+  injection_count: 0
+  success_count: 0
+  failure_count: 0
+
+created: 2026-03-25

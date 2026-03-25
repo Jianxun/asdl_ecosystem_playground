@@ -1,0 +1,48 @@
+id: les-8d13b924
+content: "Xyce source primitives in emitted netlists may not accept symbolic `dc` parameter values reliably — use numeric literals instead."
+detail: |
+  ## Condition
+  Authoring ASDL sources (vdc, vac, idc, etc.) targeting the Xyce backend where the dc
+  parameter value is derived from a module variable.
+
+  ## Rule
+  Prefer numeric literals over symbolic references for Xyce source dc values:
+  ```yaml
+  # Safer: numeric literal
+  vdd: ana.vdc dc=3.3
+
+  # Risky: symbolic reference may not resolve in emitted netlist
+  vdd: ana.vdc dc={VDD}
+  ```
+  If symbolic references are needed, verify the emitted netlist manually to confirm
+  correct substitution.
+
+  ## Root Cause
+  Xyce netlist parser may not accept all symbolic value forms depending on version and
+  context; this is a simulator-side limitation, not an ASDL authoring error.
+
+expires_when:
+  condition: "Xyce version upgrade confirms symbolic dc values work reliably, or ASDL emitter resolves values to numeric before emission"
+  watch: "config/backends.yaml"
+  issue: null
+
+source:
+  origin: lessons
+  original_id: "[T-011][executor]"
+  track: 2
+
+triggers:
+  - field: backend
+    pattern: "xyce"
+  - field: phases
+    pattern: "author|compile|simulate"
+
+confidence: 0.75
+status: active
+
+stats:
+  injection_count: 0
+  success_count: 0
+  failure_count: 0
+
+created: 2026-03-25

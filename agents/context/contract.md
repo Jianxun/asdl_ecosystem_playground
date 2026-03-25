@@ -6,8 +6,10 @@ ASDL Playground is a lab-driven repository for exercising the ASDL authoring-to-
 The repository is intentionally split between infrastructure (`pdks/`, `libs_common/`, backend config) and lab content (`labs/`). The `agents/` workflow is the canonical operating model for planning, execution, review, and context continuity.
 
 ## System boundaries / components
-- `agents/`: canonical agent workflow (roles, context, scripts, scratchpads, logs).
-- `labs/`: teaching labs; one lab per subdirectory.
+- `agents/`: canonical agent workflow (roles, context, scripts, logs).
+- `labs/specs/`: stable lab specs (YAML, never regenerated).
+- `labs/plans/`: architect-generated lab ExecPlans (regenerable).
+- `labs/builds/`: executor-generated lab implementations (regenerable).
 - `libs_common/`: shared reusable ASDL blocks (for example sources and simulation directives).
 - `pdks/`: PDK wrappers and simulator model assets used by labs.
 - `examples/`: legacy/reference assets (config/docs/scratch), not the primary authoring location.
@@ -23,16 +25,16 @@ The repository is intentionally split between infrastructure (`pdks/`, `libs_com
   - `env` variables for `PDK`, `PDK_PATH`, `PDK_ASDL_PATH`, `ASDL_DESIGN_LIBS_PATH`, and `ASDL_LIB_PATH`.
 - Task planning and status contracts:
   - GitHub Issues are the task metadata + runtime state source of truth.
-  - Active task issues include `ExecPlan Path` pointing to `agents/plans/<slug>.md`.
+  - Active task issues include `ExecPlan Path` pointing to `agents/plans/<slug>.md` (general tasks) or `labs/plans/<lab-id>.md` (lab tasks).
   - Canonical task-state labels: `task:ready`, `task:in_progress`, `task:blocked`, `task:ready_for_review`, `task:review_in_progress`, `task:done`.
   - ExecPlan format and policy are defined in `agents/prompts/workflows/execplan.md`.
   - Legacy `agents/context/tasks*.yaml` files are archived history only.
 
 ## Invariants
 - `agents/` workflow is canonical for project execution and handoff.
-- New lab source lives in `labs/`; do not create new canonical lab source under `examples/`.
+- New lab builds live in `labs/builds/`; do not create new canonical lab source under `examples/`.
 - `pdks/` and `libs_common/` are shared infrastructure and should remain stable and reusable.
-- Generated outputs for labs SHOULD go to `labs/<lab-id>/artifacts/` to keep labs self-contained.
+- Lab artifacts MUST go to `labs/builds/<lab-id>/artifacts/`; do not write lab outputs to repo root or `examples/`.
 - Task status MUST live only in GitHub Issue labels.
 - Architect owns issue creation and planning; Executor/Reviewer update permitted issue labels and PR linkage.
 

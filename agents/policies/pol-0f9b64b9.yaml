@@ -1,0 +1,35 @@
+id: pol-0f9b64b9
+content: "When a lesson is stable and reusable, promote it into the knowledge store promptly — add to agents/policies/ or agents/lessons/ with a new ID."
+detail: |
+  ## Intent
+  When a lesson is stable and reusable, encode it back into repository guidance promptly.
+
+  ## Why
+  - Prevents repeating the same friction in later sessions.
+  - Turns one-off troubleshooting into cumulative process improvement.
+
+  ## Rules
+  - Evaluate new lessons against the two-tier model: durable principle → agents/policies/,
+    time-scoped workaround → agents/lessons/.
+  - Generate ID from content hash; update README index in same change.
+  - Reference related policy IDs in lab summaries and ExecPlans when relevant.
+  - Prefer additive updates over broad rewrites unless structural consolidation is needed.
+
+source:
+  origin: principles
+  original_id: P-008
+  track: 1
+
+triggers:
+  - field: role
+    pattern: "architect|reviewer"
+
+confidence: 1.0
+status: active
+
+stats:
+  injection_count: 0
+  success_count: 0
+  failure_count: 0
+
+created: 2026-03-25

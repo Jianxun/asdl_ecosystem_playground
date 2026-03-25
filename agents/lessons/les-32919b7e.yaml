@@ -1,0 +1,43 @@
+id: les-32919b7e
+content: "For Xyce DC saves, `save_op` must emit `.PRINT DC FORMAT=CSV N(*)`; omitting `DC` causes analysis/print type mismatch rejection."
+detail: |
+  ## Condition
+  Authoring ASDL testbenches with DC operating point saves targeting the Xyce backend.
+
+  ## Rule
+  Ensure the emitted `.PRINT` statement includes the analysis type explicitly:
+  ```
+  .PRINT DC FORMAT=CSV N(*)   ← correct
+  .PRINT FORMAT=CSV N(*)       ← rejected by Xyce
+  ```
+  If the `save_op` primitive does not emit the analysis keyword, use `sim.save sim_type=DC`
+  instead.
+
+  ## Error signature
+  Xyce error: `Analysis type <A> and print type <B> are inconsistent`
+
+expires_when:
+  condition: "ASDL sim.save or save_op primitives for Xyce always emit analysis type keyword correctly"
+  watch: "libs_common/simulation.xyce.asdl"
+  issue: null
+
+source:
+  origin: lessons
+  original_id: "[T-011][executor]"
+  track: 2
+
+triggers:
+  - field: backend
+    pattern: "xyce"
+  - field: phases
+    pattern: "author|compile|simulate"
+
+confidence: 0.85
+status: active
+
+stats:
+  injection_count: 0
+  success_count: 0
+  failure_count: 0
+
+created: 2026-03-25

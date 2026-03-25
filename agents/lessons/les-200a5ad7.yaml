@@ -1,0 +1,42 @@
+id: les-200a5ad7
+content: "Use `sim.save sim_type=<analysis>` for saves in Xyce flows; `sim.save_dc` is not a valid primitive and fails compile."
+detail: |
+  ## Condition
+  Authoring ASDL testbenches targeting the Xyce backend that require save directives.
+
+  ## Rule
+  Do not use `sim.save_dc`. Use the generic save primitive with explicit analysis type:
+  ```yaml
+  instances:
+    save1: sim.save sim_type=DC signals='V(*)'
+  ```
+
+  ## Root Cause
+  `sim.save_dc` is not defined in `libs_common/simulation.xyce.asdl`. The correct primitive
+  is `sim.save` with `sim_type` parameter.
+
+expires_when:
+  condition: "sim.save_dc is defined as a valid primitive in libs_common simulation libraries"
+  watch: "libs_common/simulation.ngspice.asdl"
+  issue: null
+
+source:
+  origin: lessons
+  original_id: "[T-010][executor]"
+  track: 2
+
+triggers:
+  - field: backend
+    pattern: "xyce|ngspice"
+  - field: phases
+    pattern: "author|compile"
+
+confidence: 0.9
+status: active
+
+stats:
+  injection_count: 0
+  success_count: 0
+  failure_count: 0
+
+created: 2026-03-25
