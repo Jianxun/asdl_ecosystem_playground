@@ -45,7 +45,7 @@ Build a teaching-first ASDL curriculum composed of tightly scoped circuit design
 ## Operational implications for Architect planning
 
 - Plan work as a sequence of small labs, not broad feature sweeps.
-- Keep task metadata compact in `agents/context/tasks.yaml`; store execution detail in ExecPlans.
+- Keep task metadata in GitHub Issues and store execution detail in ExecPlans.
 - Ensure each lab task's deliverables include source, scripts, figures, and lab markdown.
 - Require friction logging and instruction/tooling follow-ups as part of closeout.
 

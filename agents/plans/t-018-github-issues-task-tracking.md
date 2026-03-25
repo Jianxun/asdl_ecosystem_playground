@@ -9,15 +9,16 @@ This migration is intentionally a clean break. Temporary flow breakage is accept
 ## Progress
 
 - [x] 2026-03-25 05:05Z Architect created migration ExecPlan for clean-break transition.
-- [ ] Define and apply GitHub Issue label/state model.
-- [ ] Update role/workflow docs to remove `tasks.yaml` dependency.
-- [ ] Remove or retire `tasks.yaml` state-machine tooling.
-- [ ] Validate end-to-end Architect -> Executor -> Reviewer flow using Issues + ExecPlans.
+- [x] 2026-03-25 04:44Z Defined and applied GitHub Issue label/state model via `gh label create`/`gh label edit`.
+- [x] 2026-03-25 04:53Z Updated role/workflow/context docs to remove active `tasks.yaml` dependency.
+- [x] 2026-03-25 04:56Z Retired `tasks.yaml` state-machine files and rewired dispatcher for issue-based scheduling.
+- [x] 2026-03-25 04:59Z Validated Architect -> Executor -> Reviewer lifecycle with pilot issue `#7`.
 
 ## Surprises & Discoveries
 
 - Existing role files and lint scripts assume `tasks.yaml` is always present and authoritative.
 - Current policy and tooling encode status constraints in `agents/scripts/lint_tasks_state.py`; this logic must move to operational conventions (labels/checklists) in GitHub.
+- Historical plans/scratchpads still mention `tasks.yaml`, so acceptance checks must distinguish active workflow docs from archived execution history.
 
 ## Decision Log
 
@@ -31,6 +32,8 @@ This migration is intentionally a clean break. Temporary flow breakage is accept
 ## Outcomes & Retrospective
 
 Target outcome is a working Issue-native workflow where active work is discoverable via `gh issue` queries, each issue links one ExecPlan, and task progress no longer depends on `tasks.yaml` edits.
+
+Current status: achieved for active role contracts, workflow prompt, issue template, and dispatcher tooling. Legacy references are retained only in archived historical plans/scratchpads.
 
 ## Context and Orientation
 
@@ -104,7 +107,7 @@ Suggested validation commands:
 ## Artifacts and Notes
 
 - Migration PR branch: TBD.
-- Migration issue(s): TBD.
+- Migration issue(s): `#6` (implementation issue), `#7` (lifecycle pilot validation).
 - Any removed or deprecated files should be listed explicitly in the PR body.
 
 ## Interfaces and Dependencies
@@ -116,28 +119,50 @@ Suggested validation commands:
 ## Final Reflection Round
 
 ### Outcome
-- TBD
+- Migrated active task tracking from repo-local YAML state to GitHub Issues + labels, with role docs, template, and tooling aligned.
 
 ### What Changed
-- TBD
+- Added canonical label model and applied labels in GitHub: task-state labels, role labels, and `kind:migration`.
+- Added GitHub issue template at `.github/ISSUE_TEMPLATE/task_execplan.yml` and config at `.github/ISSUE_TEMPLATE/config.yml`.
+- Updated role contracts (`agents/roles/architect.md`, `agents/roles/executor.md`, `agents/roles/reviewer.md`) to use issue labels and `ExecPlan Path`.
+- Updated workflow/context docs to remove active `tasks.yaml` authority and document issue-native process (`agents/context/github_issues_task_tracking.md`, `agents/context/contract.md`, `agents/context/codebase_map.md`, `agents/context/objectives.md`, `agents/context/project_status.md`, `agents/plans/README.md`, `agents/prompts/workflows/execplan.md`).
+- Retired old state machine artifacts by deleting `agents/context/tasks.yaml` and `agents/scripts/lint_tasks_state.py`; preserved a historical snapshot at `agents/context/tasks_legacy_snapshot_2026-03-25.yaml`.
+- Replaced `agents/scripts/task_dispatcher.py` scheduler logic to operate on GitHub issues (`--issues`, `--all-ready`) instead of `tasks.yaml`.
 
 ### Key Decisions and Trade-offs
-- TBD
+- Chose a clean break (delete deprecated state files) instead of compatibility shims to avoid dual-source-of-truth drift.
+- Kept historical plan/scratchpad references unchanged to preserve execution history fidelity, accepting residual grep hits in archival files.
+- Implemented issue-based dispatcher rewiring in the same migration PR to avoid leaving contradictory "active" tooling.
 
 ### Lessons Learned
-- TBD
+- Label transitions plus issue-template checklists can replace local linter-enforced state constraints for day-to-day coordination.
+- A dedicated migration playbook doc (`agents/context/github_issues_task_tracking.md`) reduces ambiguity across roles faster than piecemeal role-only edits.
+- Pilot lifecycle validation is easiest to prove with an explicit issue timeline showing label transitions and PR linkage.
 
 ### Memories to Promote
-- TBD
+- Promote: always include `ExecPlan Path` as a required issue field so executor startup is deterministic.
+- Promote: keep exactly one `task:*` and one `role:*` label on active issues to simplify queue reconstruction.
 
 ### Frictions and Complaints
-- TBD
+- `git grep` still surfaces historical references from archived plans/scratchpads; this is expected noise during migration verification.
 
 ### Improvement Proposals
-- TBD
+- Add a lightweight CI check that verifies open issues use exactly one `task:*` and one `role:*` label.
+- Add a helper script for issue label transitions (start/ready-for-review/review/done) to reduce manual `gh issue edit` mistakes.
 
 ### Evidence
-- TBD
+- `gh label list` shows canonical migration labels present (`task:*`, `role:*`, `kind:migration`).
+- `gh issue list --state open --label task:in_progress` shows active issue `#6`.
+- `gh issue view 6` confirms migration issue fields include `ExecPlan Path` and validation contract.
+- `gh issue view 7` plus timeline comments show full pilot lifecycle transitions to `task:done` and closure.
+- `git grep -n "tasks.yaml\|lint_tasks_state.py" agents/` now reports only migration docs, historical plans, and archival scratchpads (no active role/workflow dependency).
+- `./venv/bin/python -m py_compile agents/scripts/task_dispatcher.py` passes.
+- `./venv/bin/python agents/scripts/task_dispatcher.py --help` renders issue-based flags.
 
 ### Next Steps
-- TBD
+- Open migration PR and link URL in issue `#6`.
+- During review, verify no additional active docs/scripts reintroduce `tasks.yaml` authority.
+
+---
+
+Revision note (2026-03-25): Updated plan from proposed migration to executed state, including completed progress checkpoints, pilot issue evidence, retired files, and full final reflection details.

@@ -1,0 +1,78 @@
+name: Task with ExecPlan
+description: Track one architect/executor/reviewer task via labels and linked ExecPlan
+title: "Task: <short title>"
+labels:
+  - task:ready
+  - role:executor
+body:
+  - type: textarea
+    id: objective
+    attributes:
+      label: Objective
+      description: User-visible outcome this task should deliver
+      placeholder: Describe the expected outcome in 1-3 sentences.
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: In-scope and out-of-scope boundaries
+      placeholder: |
+        - In scope:
+        - Out of scope:
+    validations:
+      required: true
+
+  - type: input
+    id: execplan_path
+    attributes:
+      label: ExecPlan Path
+      description: Repository path to ExecPlan markdown file
+      placeholder: agents/plans/<task-slug>.md
+    validations:
+      required: true
+
+  - type: textarea
+    id: validation_commands
+    attributes:
+      label: Validation Commands
+      description: Commands to prove implementation is correct
+      placeholder: |
+        ```bash
+        <command 1>
+        <command 2>
+        ```
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance_evidence
+    attributes:
+      label: Acceptance Evidence
+      description: Observations, artifacts, and links that demonstrate acceptance
+      placeholder: Include command outcomes, artifact paths, and decision evidence.
+    validations:
+      required: true
+
+  - type: input
+    id: pr_url
+    attributes:
+      label: PR URL
+      description: Pull request link once executor opens review
+      placeholder: https://github.com/<org>/<repo>/pull/<number>
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: completion_gate
+    attributes:
+      label: Completion Gate
+      description: Must be true before reviewer marks task done
+      options:
+        - label: Exactly one ExecPlan executed end-to-end
+        - label: Validation evidence captured in ExecPlan
+        - label: Feature branch pushed to remote
+        - label: PR to main opened and linked here
+        - label: Issue labels transitioned to current state

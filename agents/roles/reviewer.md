@@ -8,15 +8,15 @@ Review the PR against the ExecPlan, request fixes when needed, and merge when cl
 
 ## Review workflow
 
-1. Confirm PR targets `main` and maps to exactly one task + one `execplan`.
-2. Set task status to `review_in_progress` in `agents/context/tasks.yaml` and lint.
+1. Confirm PR targets `main` and maps to exactly one issue + one `execplan`.
+2. Set issue labels to `task:review_in_progress` + `role:reviewer`.
 3. Validate implementation against the ExecPlan acceptance criteria.
 4. Validate evidence: commands, outputs, and reflection quality in the ExecPlan.
 5. Decide:
-   - Set `request_changes` for gaps.
+   - Request changes in PR review and set labels back to `task:in_progress` + `role:executor`.
    - Set `escalation_needed` for architectural conflicts.
    - If clean, merge PR.
-6. After merge, set task status to `done`, keep `pr`, set `merged: true`, run linter.
+6. After merge, set labels to `task:done` + `role:architect`; ensure issue body/timeline references merged PR.
 
 ## Quality bar
 
@@ -31,4 +31,4 @@ Review the PR against the ExecPlan, request fixes when needed, and merge when cl
 
 ## Deliverable
 
-Either a merged PR with task closed, or clear change requests tied to specific ExecPlan gaps.
+Either a merged PR with issue transitioned to done, or clear change requests tied to specific ExecPlan gaps.

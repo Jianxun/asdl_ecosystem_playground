@@ -22,25 +22,27 @@ The repository is intentionally split between infrastructure (`pdks/`, `libs_com
   - `lib_roots`: `${ASDLRC_DIR}/pdks/${PDK}/asdl`, `${ASDLRC_DIR}/libs_common`, `${ASDLRC_DIR}/libs`
   - `env` variables for `PDK`, `PDK_PATH`, `PDK_ASDL_PATH`, `ASDL_DESIGN_LIBS_PATH`, and `ASDL_LIB_PATH`.
 - Task planning and status contracts:
-  - `agents/context/tasks.yaml` is the task metadata + runtime state source of truth (`schema_version: 3`).
-  - Active task rows include `execplan` pointing to `agents/plans/<slug>.md`.
+  - GitHub Issues are the task metadata + runtime state source of truth.
+  - Active task issues include `ExecPlan Path` pointing to `agents/plans/<slug>.md`.
+  - Canonical task-state labels: `task:ready`, `task:in_progress`, `task:blocked`, `task:ready_for_review`, `task:review_in_progress`, `task:done`.
   - ExecPlan format and policy are defined in `agents/prompts/workflows/execplan.md`.
-  - `agents/context/tasks_icebox.yaml` and `agents/context/tasks_archived.yaml` use `schema_version: 1`.
+  - Legacy `agents/context/tasks*.yaml` files are archived history only.
 
 ## Invariants
 - `agents/` workflow is canonical for project execution and handoff.
 - New lab source lives in `labs/`; do not create new canonical lab source under `examples/`.
 - `pdks/` and `libs_common/` are shared infrastructure and should remain stable and reusable.
 - Generated outputs for labs SHOULD go to `labs/<lab-id>/artifacts/` to keep labs self-contained.
-- Task status MUST live only in `agents/context/tasks.yaml`.
-- Architect owns task cards and project status; Executor/Reviewer only update permitted state fields.
+- Task status MUST live only in GitHub Issue labels.
+- Architect owns issue creation and planning; Executor/Reviewer update permitted issue labels and PR linkage.
 
 ## Verification protocol
 - Context consistency:
-  - `./venv/bin/python agents/scripts/lint_tasks_state.py`
+  - `gh issue list --state open --label task:ready`
+  - `gh issue list --state open --label task:in_progress`
 - Smoke compile (per experiment task):
   - `asdlc netlist <entry.asdl> --backend <backend>`
-- Simulation and analysis commands are task-specific and must be listed in each task `verify` block.
+- Simulation and analysis commands are task-specific and must be listed in each ExecPlan + issue validation section.
 
 ## Decision log
 - 2026-03-01: Use `playground/agents` as canonical workflow authority for planning/execution/review.

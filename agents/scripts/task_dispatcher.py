@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-"""
-Run `codex exec` in JSON stream mode and echo events to the terminal.
-"""
+"""Run `codex exec` with optional GitHub Issue scheduling."""
 
 from __future__ import annotations
 
@@ -9,19 +7,32 @@ import argparse
 import json
 import os
 from pathlib import Path
+import re
 import selectors
 import subprocess
 import sys
 import time
-from typing import Any, Callable, Iterable, TextIO
-
-import yaml
+from typing import Any, Iterable, TextIO
 
 DEFAULT_PROMPT = "analyze the structure of the codebase"
-TASKS_PATH = "agents/context/tasks.yaml"
 MAX_REVIEW_ROUNDS = 3
 IMESSAGE_SCRIPT = os.path.join(os.path.dirname(__file__), "send_imessage.sh")
 LOGS_DIR = Path("agents/log")
+
+TASK_LABELS = {
+    "task:ready",
+    "task:in_progress",
+    "task:blocked",
+    "task:ready_for_review",
+    "task:review_in_progress",
+    "task:done",
+}
+
+ROLE_LABELS = {
+    "role:architect",
+    "role:executor",
+    "role:reviewer",
+}
 
 ANSI_GREEN = "\033[32m"
 ANSI_BLUE = "\033[34m"
@@ -29,14 +40,7 @@ ANSI_RESET = "\033[0m"
 
 
 def build_command(prompt: str) -> list[str]:
-    return [
-        "codex",
-        "exec",
-        "--json",
-        "-s",
-        "danger-full-access",
-        prompt,
-    ]
+    return ["codex", "exec", "--json", "-s", "danger-full-access", prompt]
 
 
 def format_event(payload: dict[str, Any]) -> tuple[str, str]:
@@ -56,20 +60,17 @@ def format_event(payload: dict[str, Any]) -> tuple[str, str]:
             return f"[command.done] exit={exit_code}", "default"
         if item_type == "reasoning":
             text = (item.get("text") or "").strip()
-            if text:
-                return f"[reasoning] {text}", "reasoning"
-            return "[reasoning]", "reasoning"
+            return (f"[reasoning] {text}", "reasoning") if text else ("[reasoning]", "reasoning")
         if item_type == "agent_message":
             text = (item.get("text") or "").strip()
-            if text:
-                return f"[agent] {text}", "agent"
-            return "[agent]", "agent"
+            return (f"[agent] {text}", "agent") if text else ("[agent]", "agent")
         return f"[item.done] {item_type}", "default"
     if event_type == "turn.completed":
         usage = payload.get("usage", {})
-        input_tokens = usage.get("input_tokens")
-        output_tokens = usage.get("output_tokens")
-        return f"[turn.done] input_tokens={input_tokens} output_tokens={output_tokens}", "default"
+        return (
+            f"[turn.done] input_tokens={usage.get('input_tokens')} output_tokens={usage.get('output_tokens')}",
+            "default",
+        )
     return f"[event] {event_type}", "default"
 
 
@@ -99,17 +100,17 @@ def render_line(line: str) -> tuple[str, str, str | None, dict[str, Any] | None]
     return formatted, tag, agent_text, payload
 
 
-def open_task_log(task_id: str, role: str, command: Iterable[str]) -> tuple[TextIO, str]:
+def open_task_log(issue_id: str, role: str, command: Iterable[str]) -> tuple[TextIO, str]:
     LOGS_DIR.mkdir(parents=True, exist_ok=True)
-    path = LOGS_DIR / f"{task_id}.log.json"
+    path = LOGS_DIR / f"issue-{issue_id}.log.json"
     handle = path.open("a", encoding="utf-8")
-    session_id = f"{task_id}-{role}-{int(time.time() * 1000)}"
+    session_id = f"issue-{issue_id}-{role}-{int(time.time() * 1000)}"
     handle.write(
         json.dumps(
             {
                 "kind": "session_start",
                 "session_id": session_id,
-                "task_id": task_id,
+                "issue_id": issue_id,
                 "role": role,
                 "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
                 "command": list(command),
@@ -166,7 +167,7 @@ def close_task_log(handle: TextIO, session_id: str, exit_code: int, summary: str
 def stream_process(
     command: Iterable[str],
     prefix: str | None = None,
-    task_id: str | None = None,
+    issue_id: str | None = None,
     role: str | None = None,
 ) -> tuple[int, str | None]:
     last_agent_message: str | None = None
@@ -174,8 +175,8 @@ def stream_process(
     session_id: str | None = None
     command_list = list(command)
 
-    if task_id and role:
-        log_handle, session_id = open_task_log(task_id, role, command_list)
+    if issue_id and role:
+        log_handle, session_id = open_task_log(issue_id, role, command_list)
 
     try:
         proc = subprocess.Popen(
@@ -226,10 +227,9 @@ def stream_process(
                 )
 
             timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+            output = f"[{timestamp}] {colorize(formatted, tag)}\n"
             if prefix:
-                output = f"{prefix} [{timestamp}] {colorize(formatted, tag)}\n"
-            else:
-                output = f"[{timestamp}] {colorize(formatted, tag)}\n"
+                output = f"{prefix} {output}"
             if key.data == "stderr":
                 sys.stderr.write(output)
                 sys.stderr.flush()
@@ -243,84 +243,77 @@ def stream_process(
     return exit_code, last_agent_message
 
 
-def load_tasks(path: str) -> dict[str, Any]:
-    with open(path, "r", encoding="utf-8") as handle:
-        data = yaml.safe_load(handle) or {}
-    if not isinstance(data, dict):
-        raise ValueError(f"Invalid tasks structure in {path}")
-    return data
+def run_gh_json(args: list[str]) -> Any:
+    proc = subprocess.run(["gh", *args], check=True, capture_output=True, text=True)
+    return json.loads(proc.stdout)
 
 
-def task_entries(path: str) -> list[dict[str, Any]]:
-    data = load_tasks(path)
-    entries: list[dict[str, Any]] = []
-    for section in ("current_sprint", "backlog"):
-        bucket = data.get(section, [])
-        if not isinstance(bucket, list):
-            continue
-        for item in bucket:
-            if isinstance(item, dict):
-                entries.append(item)
-    return entries
+def issue_info(issue_number: int) -> dict[str, Any]:
+    return run_gh_json(["issue", "view", str(issue_number), "--json", "number,title,body,labels,url"])
 
 
-def task_ids_from_tasks(path: str) -> list[str]:
-    entries = task_entries(path)
-    task_ids: list[str] = []
-    for entry in entries:
-        task_id = entry.get("id")
-        if isinstance(task_id, str):
-            task_ids.append(task_id)
-    return task_ids
+def issue_labels(issue_number: int) -> set[str]:
+    info = issue_info(issue_number)
+    labels = info.get("labels", [])
+    return {item.get("name", "") for item in labels if isinstance(item, dict)}
 
 
-def task_status(path: str, task_id: str) -> str | None:
-    for entry in task_entries(path):
-        if entry.get("id") != task_id:
-            continue
-        status = entry.get("status")
-        if isinstance(status, str):
-            return status
-    return None
+def extract_execplan_path(issue_body: str) -> str | None:
+    match = re.search(r"^### ExecPlan Path\n+(.+)$", issue_body, flags=re.MULTILINE)
+    if not match:
+        return None
+    path = match.group(1).strip()
+    return path if path else None
 
 
-def task_execplan(path: str, task_id: str) -> str | None:
-    for entry in task_entries(path):
-        if entry.get("id") != task_id:
-            continue
-        execplan = entry.get("execplan")
-        if isinstance(execplan, str) and execplan.strip():
-            return execplan
-    return None
+def list_ready_issues() -> list[int]:
+    proc = subprocess.run(
+        [
+            "gh",
+            "issue",
+            "list",
+            "--state",
+            "open",
+            "--label",
+            "task:ready",
+            "--json",
+            "number",
+            "--jq",
+            ".[].number",
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    out = proc.stdout.strip()
+    if not out:
+        return []
+    return [int(x) for x in out.splitlines() if x.strip()]
 
 
-def build_executor_prompt(
-    task_id: str,
-    tasks_path: str,
-    feedback: str | None = None,
-) -> str:
-    repo_path = os.getcwd()
-    execplan = task_execplan(tasks_path, task_id)
-    plan_text = execplan or "<missing execplan in agents/context/tasks.yaml>"
+def build_executor_prompt(issue_number: int, feedback: str | None = None) -> str:
+    info = issue_info(issue_number)
+    plan_path = extract_execplan_path(info.get("body", "")) or "<missing ExecPlan Path in issue body>"
     base = (
         "You are the executor agent. Read and follow your role definition "
-        f"'agents/roles/executor.md'. Work on task {task_id}. "
-        f"Execute plan '{plan_text}'. Repo path: {repo_path}."
+        "'agents/roles/executor.md'. "
+        f"Work on GitHub issue #{issue_number}. Execute plan '{plan_path}'. "
+        f"Issue URL: {info.get('url')}. Repo path: {os.getcwd()}."
     )
     if feedback:
         base = f"{base}\nReviewer feedback:\n{feedback}"
     return base
 
 
-def build_reviewer_prompt(task_id: str, tasks_path: str, summary: str | None) -> str:
-    repo_path = os.getcwd()
-    execplan = task_execplan(tasks_path, task_id)
-    plan_text = execplan or "<missing execplan in agents/context/tasks.yaml>"
+def build_reviewer_prompt(issue_number: int, summary: str | None) -> str:
+    info = issue_info(issue_number)
+    plan_path = extract_execplan_path(info.get("body", "")) or "<missing ExecPlan Path in issue body>"
     summary_text = summary or "No executor summary captured."
     return (
         "You are the reviewer agent. Read and follow your role definition "
-        f"'agents/roles/reviewer.md'. Review task {task_id}. "
-        f"Use plan '{plan_text}'. Repo path: {repo_path}.\n"
+        "'agents/roles/reviewer.md'. "
+        f"Review GitHub issue #{issue_number}. Use plan '{plan_path}'. "
+        f"Issue URL: {info.get('url')}. Repo path: {os.getcwd()}.\n"
         "Here are the summaries from the executor agent:\n"
         f"{summary_text}"
     )
@@ -328,155 +321,116 @@ def build_reviewer_prompt(task_id: str, tasks_path: str, summary: str | None) ->
 
 def run_codex(
     prompt: str,
-    task_id: str | None = None,
+    issue_id: str | None = None,
     role: str | None = None,
 ) -> tuple[int, str | None]:
     command = build_command(prompt)
     print(f"Running: {' '.join(command)}")
     prefix = None
-    if task_id and role:
-        prefix = f"[{task_id}][{role}]"
-    elif task_id:
-        prefix = f"[{task_id}]"
-    elif role:
-        prefix = f"[{role}]"
-    return stream_process(command, prefix=prefix, task_id=task_id, role=role)
+    if issue_id and role:
+        prefix = f"[issue-{issue_id}][{role}]"
+    return stream_process(command, prefix=prefix, issue_id=issue_id, role=role)
 
 
-def run_scheduler(
-    task_ids: list[str],
-    tasks_path: str,
-    max_rounds: int,
-) -> int:
-    for task_id in task_ids:
-        print(f"Starting task {task_id}")
+def send_imessage(role: str, issue_number: int, labels: set[str], response: str | None) -> None:
+    label_text = ",".join(sorted(labels)) or "unknown"
+    response_text = response or "No agent response captured."
+    payload = f"[{role}] [issue-{issue_number}] ({label_text}): {response_text}"
+    try:
+        subprocess.run([IMESSAGE_SCRIPT, payload], check=False, text=True, capture_output=True)
+    except FileNotFoundError:
+        print(f"Warning: {IMESSAGE_SCRIPT} not found; skipping iMessage send.", file=sys.stderr)
+
+
+def run_scheduler(issue_numbers: list[int], max_rounds: int) -> int:
+    for issue_number in issue_numbers:
+        print(f"Starting issue #{issue_number}")
         rounds = 0
         reviewer_feedback: str | None = None
         while rounds < max_rounds:
-            executor_prompt = build_executor_prompt(
-                task_id,
-                tasks_path,
-                feedback=reviewer_feedback,
-            )
+            executor_prompt = build_executor_prompt(issue_number, feedback=reviewer_feedback)
             exit_code, executor_summary = run_codex(
                 executor_prompt,
-                task_id=task_id,
+                issue_id=str(issue_number),
                 role="executor",
             )
             if exit_code != 0:
                 print(f"Interrupted: executor exited with code {exit_code}", file=sys.stderr)
                 return exit_code
 
-            status = task_status(tasks_path, task_id)
-            send_imessage("executor", task_id, status, executor_summary)
-            if status != "ready_for_review":
+            labels = issue_labels(issue_number)
+            send_imessage("executor", issue_number, labels, executor_summary)
+            if "task:ready_for_review" not in labels:
                 print(
-                    f"Interrupted: task {task_id} status is '{status}', expected 'ready_for_review'.",
+                    f"Interrupted: issue #{issue_number} labels are {sorted(labels)}, expected task:ready_for_review.",
                     file=sys.stderr,
                 )
                 return 1
 
-            reviewer_prompt = build_reviewer_prompt(task_id, tasks_path, executor_summary)
+            reviewer_prompt = build_reviewer_prompt(issue_number, executor_summary)
             exit_code, reviewer_summary = run_codex(
                 reviewer_prompt,
-                task_id=task_id,
+                issue_id=str(issue_number),
                 role="reviewer",
             )
             if exit_code != 0:
                 print(f"Interrupted: reviewer exited with code {exit_code}", file=sys.stderr)
                 return exit_code
 
-            status = task_status(tasks_path, task_id)
-            send_imessage("reviewer", task_id, status, reviewer_summary)
-            if status == "done":
-                print(f"Task {task_id} completed.")
+            labels = issue_labels(issue_number)
+            send_imessage("reviewer", issue_number, labels, reviewer_summary)
+            if "task:done" in labels:
+                print(f"Issue #{issue_number} completed.")
                 break
-
-            if status == "request_changes":
+            if "task:in_progress" in labels:
                 rounds += 1
                 if rounds >= max_rounds:
                     print(
-                        f"Interrupted: task {task_id} exceeded {max_rounds} review rounds.",
+                        f"Interrupted: issue #{issue_number} exceeded {max_rounds} review rounds.",
                         file=sys.stderr,
                     )
                     return 1
                 reviewer_feedback = reviewer_summary or "No reviewer summary captured."
-                print(f"Task {task_id} requested changes; restarting executor (round {rounds + 1}).")
+                print(f"Issue #{issue_number} requested changes; restarting executor.")
                 continue
 
             print(
-                f"Interrupted: task {task_id} status is '{status}', expected 'done' or 'request_changes'.",
+                f"Interrupted: issue #{issue_number} labels are {sorted(labels)}, expected task:done or task:in_progress.",
                 file=sys.stderr,
             )
             return 1
     return 0
 
 
-def send_imessage(role: str, task_id: str, status: str | None, response: str | None) -> None:
-    message_status = status or "unknown"
-    response_text = response or "No agent response captured."
-    payload = f"[{role}] [{task_id}] ({message_status}): {response_text}"
-    try:
-        subprocess.run(
-            [IMESSAGE_SCRIPT, payload],
-            check=False,
-            text=True,
-            capture_output=True,
-        )
-    except FileNotFoundError:
-        print(f"Warning: {IMESSAGE_SCRIPT} not found; skipping iMessage send.", file=sys.stderr)
-
-
 def main() -> int:
-    parser = argparse.ArgumentParser(
-        description="Launch codex exec in JSON stream mode and print events.",
-    )
+    parser = argparse.ArgumentParser(description="Launch codex exec in JSON stream mode and print events.")
+    parser.add_argument("--prompt", default=DEFAULT_PROMPT, help="Prompt to pass to codex exec.")
+    parser.add_argument("--issues", nargs="*", type=int, help="GitHub issue numbers to run in order.")
     parser.add_argument(
-        "--prompt",
-        default=DEFAULT_PROMPT,
-        help="Prompt to pass to codex exec.",
-    )
-    parser.add_argument(
-        "--tasks",
-        nargs="*",
-        help="Task IDs to run in order.",
-    )
-    parser.add_argument(
-        "--all",
+        "--all-ready",
         action="store_true",
-        help="Run all tasks not marked done in tasks.yaml (in file order).",
-    )
-    parser.add_argument(
-        "--tasks-file",
-        default=TASKS_PATH,
-        help="Path to tasks.yaml.",
+        help="Run all open issues labeled task:ready (in GitHub list order).",
     )
     parser.add_argument(
         "--max-rounds",
         type=int,
         default=MAX_REVIEW_ROUNDS,
-        help="Maximum executor-reviewer rounds per task.",
+        help="Maximum executor-reviewer rounds per issue.",
     )
     args = parser.parse_args()
 
-    if args.all and args.tasks:
-        print("Error: Use --all or --tasks, not both.", file=sys.stderr)
+    if args.all_ready and args.issues:
+        print("Error: Use --all-ready or --issues, not both.", file=sys.stderr)
         return 2
 
-    if args.all or args.tasks:
-        if args.all:
-            ordered_ids = task_ids_from_tasks(args.tasks_file)
-            task_ids = [
-                task_id
-                for task_id in ordered_ids
-                if task_status(args.tasks_file, task_id) != "done"
-            ]
-        else:
-            task_ids = list(args.tasks or [])
-        if not task_ids:
-            print("No tasks to run.")
+    if args.all_ready or args.issues:
+        issue_numbers = list(args.issues or [])
+        if args.all_ready:
+            issue_numbers = list_ready_issues()
+        if not issue_numbers:
+            print("No issues to run.")
             return 0
-        return run_scheduler(task_ids, args.tasks_file, args.max_rounds)
+        return run_scheduler(issue_numbers, args.max_rounds)
 
     exit_code, _ = run_codex(args.prompt)
     return exit_code

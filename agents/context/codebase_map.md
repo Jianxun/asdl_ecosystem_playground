@@ -3,11 +3,11 @@
 ## Directories
 - `agents/`: canonical workflow system for this repo.
 - `agents/roles/`: Architect, Executor, Reviewer role contracts.
-- `agents/context/`: project working memory and consolidated task metadata/state.
+- `agents/context/`: project working memory and migration notes.
 - `agents/instructions/`: hydration pack for future agents (quickstart/workflow/debugging/snippets).
 - `agents/prompts/workflows/`: workflow prompts (including ExecPlan prompt contract).
 - `agents/plans/`: active execution plan documents.
-- `agents/scripts/`: workflow scripts (`lint_tasks_state.py`, dispatcher helpers).
+- `agents/scripts/`: workflow scripts (dispatcher helpers, ingestion helpers).
 - `agents/tools/opencode_session_pipeline/`: OpenCode session ingest/normalize/validate/query pipeline.
 - `agents/scratchpads/`: per-task notes (`T-00X_*.md`).
 - `archive/`: repo-root telemetry archive for OpenCode session raw logs, canonical events, indexes, and checkpoints.
@@ -24,7 +24,7 @@
 - `agents/roles/architect.md`: project planning/contract authority.
 - `agents/roles/executor.md`: implementation task execution protocol.
 - `agents/roles/reviewer.md`: review/merge closeout protocol.
-- `agents/scripts/lint_tasks_state.py`: consolidated task metadata/state linter.
+- `agents/context/github_issues_task_tracking.md`: canonical issue label/state workflow.
 - `agents/scripts/new_execplan.py`: creates an ExecPlan scaffold under `agents/plans/`.
 - `agents/scripts/run_opencode_ingestion.sh`: canonical one-command session ingest -> normalize -> validate.
 
