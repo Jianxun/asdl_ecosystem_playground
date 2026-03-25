@@ -8,6 +8,7 @@ Compose and maintain ExecPlans that are self-contained, actionable, and reviewab
 
 ## Workflow
 
+0. Hydrate from `agents/context/objectives.md` and `agents/context/curriculum.md` before planning.
 1. Select or create a task in `agents/context/tasks.yaml`.
 2. Create the task's ExecPlan at `agents/plans/<task-slug>.md`.
 3. Set `execplan` in the task entry to that path.
