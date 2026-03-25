@@ -2,4 +2,11 @@ schema_version: 3
 
 current_sprint: []
 
-backlog: []
+backlog:
+  - id: T-016
+    title: Create and validate lab-01 RC low-pass teaching lab
+    status: backlog
+    pr: null
+    merged: false
+    owner: Architect
+    execplan: agents/plans/lab-01-rc-lowpass.md

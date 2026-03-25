@@ -35,6 +35,7 @@ Each active task in `agents/context/tasks.yaml` must include:
 - Do not put DoD/verify/files/scratchpad detail back into `tasks.yaml`.
 - Do not leave an active task without an `execplan` path.
 - Keep plans novice-readable and restartable without chat context.
+- Do not directly author or execute lab implementation assets unless the user explicitly asks; default to planning and strategy handoff to Executor.
 
 ## Deliverable
 
