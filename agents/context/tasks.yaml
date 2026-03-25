@@ -5,8 +5,8 @@ current_sprint: []
 backlog:
   - id: T-016
     title: Create and validate lab-01 RC low-pass teaching lab
-    status: backlog
+    status: in_progress
     pr: null
     merged: false
-    owner: Architect
+    owner: Executor
     execplan: agents/plans/lab-01-rc-lowpass.md

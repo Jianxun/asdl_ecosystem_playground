@@ -32,7 +32,7 @@ A lab is considered publish-ready only when it meets all of the following:
 
 | ID | Title | Concept | Key Tradeoff/Property | Difficulty | Status | Notes |
 |---|---|---|---|---|---|---|
-| lab-01-rc-lowpass | RC Low-Pass Fundamentals | 1st-order filtering | cutoff frequency vs settling speed | beginner | planned | canonical first lab |
+| lab-01-rc-lowpass | RC Low-Pass Fundamentals | 1st-order filtering | cutoff frequency vs settling speed | beginner | review | canonical first lab |
 | lab-02-resistive-divider-loading | Loaded Voltage Divider | source/load interaction | accuracy vs output drive | beginner | planned | introduce loading error |
 | lab-03-common-source-gain-headroom | Common-Source Gain Stage | small-signal gain | gain vs output swing/headroom | intermediate | planned | include bias point sensitivity |
 | lab-04-differential-pair-tail-current | Differential Pair Basics | transconductance steering | gain/linearity vs tail current | intermediate | planned | connect to OTA intuition |

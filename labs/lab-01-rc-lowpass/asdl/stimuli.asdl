@@ -1,0 +1,17 @@
+devices:
+  vacpulse:
+    ports: [p, n]
+    parameters:
+      dc: 0
+      ac_mag: 1
+      ac_phase: 0
+      v1: 0
+      v2: 1
+      td: 100e-9
+      tr: 1e-9
+      tf: 1e-9
+      pw: 20e-6
+      per: 40e-6
+    backends:
+      sim.xyce:
+        template: 'V_{name} {ports} DC {dc} AC {ac_mag} {ac_phase} PULSE ({v1} {v2} {td} {tr} {tf} {pw} {per})'
