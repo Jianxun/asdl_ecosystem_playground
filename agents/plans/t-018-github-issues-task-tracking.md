@@ -106,7 +106,8 @@ Suggested validation commands:
 
 ## Artifacts and Notes
 
-- Migration PR branch: TBD.
+- Migration PR branch: `t-018-github-issues-task-tracking`.
+- Migration PR: `https://github.com/Jianxun/asdl_ecosystem_playground/pull/8`.
 - Migration issue(s): `#6` (implementation issue), `#7` (lifecycle pilot validation).
 - Any removed or deprecated files should be listed explicitly in the PR body.
 
@@ -155,6 +156,7 @@ Suggested validation commands:
 - `gh issue list --state open --label task:in_progress` shows active issue `#6`.
 - `gh issue view 6` confirms migration issue fields include `ExecPlan Path` and validation contract.
 - `gh issue view 7` plus timeline comments show full pilot lifecycle transitions to `task:done` and closure.
+- Issue `#6` comment history includes executor handoff with PR URL `https://github.com/Jianxun/asdl_ecosystem_playground/pull/8` and labels moved to `task:ready_for_review` + `role:reviewer`.
 - `git grep -n "tasks.yaml\|lint_tasks_state.py" agents/` now reports only migration docs, historical plans, and archival scratchpads (no active role/workflow dependency).
 - `./venv/bin/python -m py_compile agents/scripts/task_dispatcher.py` passes.
 - `./venv/bin/python agents/scripts/task_dispatcher.py --help` renders issue-based flags.
