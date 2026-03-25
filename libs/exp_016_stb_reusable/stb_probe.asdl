@@ -1,0 +1,38 @@
+imports:
+  ana: analoglib.asdl
+
+devices:
+  vac_param:
+    ports: [p, n]
+    parameters:
+      dc: 0
+      ac_mag: 1
+      ac_phase: 0
+    backends:
+      sim.xyce:
+        template: 'V_{name} {ports} DC {dc} AC {{{ac_mag}}} {ac_phase}'
+
+  iac_param:
+    ports: [p, n]
+    parameters:
+      dc: 0
+      ac_mag: 0
+      ac_phase: 0
+    backends:
+      sim.xyce:
+        template: 'I_{name} {ports} DC {dc} AC {{{ac_mag}}} {ac_phase}'
+
+modules:
+  stb_probe:
+    parameters:
+      vtest_ac: 1
+      itest_ac: 0
+    instances:
+      vs_out: ana.vdc dc=0
+      vtest: vac_param dc=0 ac_mag=vtest_ac ac_phase=0
+      itest: iac_param dc=0 ac_mag=itest_ac ac_phase=0
+    nets:
+      $out: [vs_out.p]
+      x: [vs_out.n, vtest.p, itest.p]
+      $in: [vtest.n]
+      '0': [itest.n]

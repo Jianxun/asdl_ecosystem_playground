@@ -3,8 +3,10 @@
 ## Directories
 - `agents/`: canonical workflow system for this repo.
 - `agents/roles/`: Architect, Executor, Reviewer role contracts.
-- `agents/context/`: project working memory and task state.
+- `agents/context/`: project working memory and consolidated task metadata/state.
 - `agents/instructions/`: hydration pack for future agents (quickstart/workflow/debugging/snippets).
+- `agents/prompts/workflows/`: workflow prompts (including ExecPlan prompt contract).
+- `agents/plans/`: active execution plan documents.
 - `agents/scripts/`: workflow scripts (`lint_tasks_state.py`, dispatcher helpers).
 - `agents/scratchpads/`: per-task notes (`T-00X_*.md`).
 - `libs/`: canonical experiment libraries (one experiment per subdirectory).
@@ -20,7 +22,8 @@
 - `agents/roles/architect.md`: project planning/contract authority.
 - `agents/roles/executor.md`: implementation task execution protocol.
 - `agents/roles/reviewer.md`: review/merge closeout protocol.
-- `agents/scripts/lint_tasks_state.py`: task and task-state consistency linter.
+- `agents/scripts/lint_tasks_state.py`: consolidated task metadata/state linter.
+- `agents/scripts/new_execplan.py`: creates an ExecPlan scaffold under `agents/plans/`.
 
 ## Quick Reference: Configuration
 - `.asdlrc`: project-level backend config/lib roots/env wiring.

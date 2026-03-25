@@ -18,7 +18,7 @@ from typing import Any, Callable, Iterable, TextIO
 import yaml
 
 DEFAULT_PROMPT = "analyze the structure of the codebase"
-TASKS_STATE_PATH = "agents/context/tasks_state.yaml"
+TASKS_PATH = "agents/context/tasks.yaml"
 MAX_REVIEW_ROUNDS = 3
 IMESSAGE_SCRIPT = os.path.join(os.path.dirname(__file__), "send_imessage.sh")
 LOGS_DIR = Path("agents/log")
@@ -243,52 +243,84 @@ def stream_process(
     return exit_code, last_agent_message
 
 
-def load_tasks_state(path: str) -> dict[str, Any]:
+def load_tasks(path: str) -> dict[str, Any]:
     with open(path, "r", encoding="utf-8") as handle:
         data = yaml.safe_load(handle) or {}
     if not isinstance(data, dict):
-        raise ValueError(f"Invalid tasks state structure in {path}")
+        raise ValueError(f"Invalid tasks structure in {path}")
     return data
 
 
-def task_ids_from_state(path: str) -> list[str]:
-    data = load_tasks_state(path)
-    task_ids: list[str] = []
-    for key in data.keys():
-        if key == "schema_version":
+def task_entries(path: str) -> list[dict[str, Any]]:
+    data = load_tasks(path)
+    entries: list[dict[str, Any]] = []
+    for section in ("current_sprint", "backlog"):
+        bucket = data.get(section, [])
+        if not isinstance(bucket, list):
             continue
-        task_ids.append(key)
+        for item in bucket:
+            if isinstance(item, dict):
+                entries.append(item)
+    return entries
+
+
+def task_ids_from_tasks(path: str) -> list[str]:
+    entries = task_entries(path)
+    task_ids: list[str] = []
+    for entry in entries:
+        task_id = entry.get("id")
+        if isinstance(task_id, str):
+            task_ids.append(task_id)
     return task_ids
 
 
 def task_status(path: str, task_id: str) -> str | None:
-    data = load_tasks_state(path)
-    entry = data.get(task_id)
-    if not isinstance(entry, dict):
-        return None
-    status = entry.get("status")
-    if isinstance(status, str):
-        return status
+    for entry in task_entries(path):
+        if entry.get("id") != task_id:
+            continue
+        status = entry.get("status")
+        if isinstance(status, str):
+            return status
     return None
 
 
-def build_executor_prompt(task_id: str, feedback: str | None = None) -> str:
+def task_execplan(path: str, task_id: str) -> str | None:
+    for entry in task_entries(path):
+        if entry.get("id") != task_id:
+            continue
+        execplan = entry.get("execplan")
+        if isinstance(execplan, str) and execplan.strip():
+            return execplan
+    return None
+
+
+def build_executor_prompt(
+    task_id: str,
+    tasks_path: str,
+    feedback: str | None = None,
+) -> str:
     repo_path = os.getcwd()
+    execplan = task_execplan(tasks_path, task_id)
+    plan_text = execplan or "<missing execplan in agents/context/tasks.yaml>"
     base = (
         "You are the executor agent. Read and follow your role definition "
-        f"'agents/roles/executor.md'. Work on task {task_id}. Repo path: {repo_path}."
+        f"'agents/roles/executor.md'. Work on task {task_id}. "
+        f"Execute plan '{plan_text}'. Repo path: {repo_path}."
     )
     if feedback:
         base = f"{base}\nReviewer feedback:\n{feedback}"
     return base
 
 
-def build_reviewer_prompt(task_id: str, summary: str | None) -> str:
+def build_reviewer_prompt(task_id: str, tasks_path: str, summary: str | None) -> str:
     repo_path = os.getcwd()
+    execplan = task_execplan(tasks_path, task_id)
+    plan_text = execplan or "<missing execplan in agents/context/tasks.yaml>"
     summary_text = summary or "No executor summary captured."
     return (
         "You are the reviewer agent. Read and follow your role definition "
-        f"'agents/roles/reviewer.md'. Review task {task_id}. Repo path: {repo_path}.\n"
+        f"'agents/roles/reviewer.md'. Review task {task_id}. "
+        f"Use plan '{plan_text}'. Repo path: {repo_path}.\n"
         "Here are the summaries from the executor agent:\n"
         f"{summary_text}"
     )
@@ -313,7 +345,7 @@ def run_codex(
 
 def run_scheduler(
     task_ids: list[str],
-    tasks_state_path: str,
+    tasks_path: str,
     max_rounds: int,
 ) -> int:
     for task_id in task_ids:
@@ -321,7 +353,11 @@ def run_scheduler(
         rounds = 0
         reviewer_feedback: str | None = None
         while rounds < max_rounds:
-            executor_prompt = build_executor_prompt(task_id, feedback=reviewer_feedback)
+            executor_prompt = build_executor_prompt(
+                task_id,
+                tasks_path,
+                feedback=reviewer_feedback,
+            )
             exit_code, executor_summary = run_codex(
                 executor_prompt,
                 task_id=task_id,
@@ -331,7 +367,7 @@ def run_scheduler(
                 print(f"Interrupted: executor exited with code {exit_code}", file=sys.stderr)
                 return exit_code
 
-            status = task_status(tasks_state_path, task_id)
+            status = task_status(tasks_path, task_id)
             send_imessage("executor", task_id, status, executor_summary)
             if status != "ready_for_review":
                 print(
@@ -340,7 +376,7 @@ def run_scheduler(
                 )
                 return 1
 
-            reviewer_prompt = build_reviewer_prompt(task_id, executor_summary)
+            reviewer_prompt = build_reviewer_prompt(task_id, tasks_path, executor_summary)
             exit_code, reviewer_summary = run_codex(
                 reviewer_prompt,
                 task_id=task_id,
@@ -350,7 +386,7 @@ def run_scheduler(
                 print(f"Interrupted: reviewer exited with code {exit_code}", file=sys.stderr)
                 return exit_code
 
-            status = task_status(tasks_state_path, task_id)
+            status = task_status(tasks_path, task_id)
             send_imessage("reviewer", task_id, status, reviewer_summary)
             if status == "done":
                 print(f"Task {task_id} completed.")
@@ -408,12 +444,12 @@ def main() -> int:
     parser.add_argument(
         "--all",
         action="store_true",
-        help="Run all tasks not marked done in tasks_state.yaml (in file order).",
+        help="Run all tasks not marked done in tasks.yaml (in file order).",
     )
     parser.add_argument(
-        "--tasks-state",
-        default=TASKS_STATE_PATH,
-        help="Path to tasks_state.yaml.",
+        "--tasks-file",
+        default=TASKS_PATH,
+        help="Path to tasks.yaml.",
     )
     parser.add_argument(
         "--max-rounds",
@@ -429,18 +465,18 @@ def main() -> int:
 
     if args.all or args.tasks:
         if args.all:
-            ordered_ids = task_ids_from_state(args.tasks_state)
+            ordered_ids = task_ids_from_tasks(args.tasks_file)
             task_ids = [
                 task_id
                 for task_id in ordered_ids
-                if task_status(args.tasks_state, task_id) != "done"
+                if task_status(args.tasks_file, task_id) != "done"
             ]
         else:
             task_ids = list(args.tasks or [])
         if not task_ids:
             print("No tasks to run.")
             return 0
-        return run_scheduler(task_ids, args.tasks_state, args.max_rounds)
+        return run_scheduler(task_ids, args.tasks_file, args.max_rounds)
 
     exit_code, _ = run_codex(args.prompt)
     return exit_code

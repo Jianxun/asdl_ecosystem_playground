@@ -22,8 +22,9 @@ The repository is intentionally split between infrastructure (`pdks/`, `libs_com
   - `lib_roots`: `${ASDLRC_DIR}/pdks/${PDK}/asdl`, `${ASDLRC_DIR}/libs_common`, `${ASDLRC_DIR}/libs`
   - `env` variables for `PDK`, `PDK_PATH`, `PDK_ASDL_PATH`, `ASDL_DESIGN_LIBS_PATH`, and `ASDL_LIB_PATH`.
 - Task planning and status contracts:
-  - `agents/context/tasks.yaml` is the task card source of truth (`schema_version: 2`).
-  - `agents/context/tasks_state.yaml` is the task runtime state map (`schema_version: 2`).
+  - `agents/context/tasks.yaml` is the task metadata + runtime state source of truth (`schema_version: 3`).
+  - Active task rows include `execplan` pointing to `agents/plans/<slug>.md`.
+  - ExecPlan format and policy are defined in `agents/prompts/workflows/execplan.md`.
   - `agents/context/tasks_icebox.yaml` and `agents/context/tasks_archived.yaml` use `schema_version: 1`.
 
 ## Invariants
@@ -31,7 +32,7 @@ The repository is intentionally split between infrastructure (`pdks/`, `libs_com
 - New experiment source lives in `libs/`; do not create new canonical experiment source under `examples/`.
 - `pdks/` and `libs_common/` are shared infrastructure and should remain stable and reusable.
 - Generated outputs MUST go to `runs/` (or other explicitly generated paths), not under `libs/`.
-- Task status MUST live only in `agents/context/tasks_state.yaml`.
+- Task status MUST live only in `agents/context/tasks.yaml`.
 - Architect owns task cards and project status; Executor/Reviewer only update permitted state fields.
 
 ## Verification protocol
