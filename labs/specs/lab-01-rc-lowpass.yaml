@@ -1,0 +1,26 @@
+lab_id: lab-01-rc-lowpass
+title: "RC Low-Pass Fundamentals"
+difficulty: beginner
+
+directive:
+  concept: "First-order passive RC low-pass behavior"
+  learning_goal: "Build intuition for how one pole shapes both frequency response and time-domain settling."
+  practical_context: "Simple low-pass sections appear in filtering, bias decoupling, and compensation paths."
+
+mechanisms_to_demonstrate:
+  - "Single-pole attenuation with approximately -20 dB/dec high-frequency rolloff"
+  - "Cutoff behavior around the -3 dB point"
+  - "Exponential step response governed by one dominant time constant"
+
+tradeoffs_to_explain:
+  - "Bandwidth versus settling speed through changes in the RC product"
+  - "How increasing R or C lowers bandwidth and slows time response"
+
+evidence_expectations:
+  - "Show theory-first reasoning before simulation interpretation"
+  - "Include both frequency-domain and time-domain simulation evidence"
+  - "Provide at least one quantitative theory-versus-simulation comparison with explicit tolerance"
+
+delivery_expectations:
+  - "Lab is reproducible from repo root with explicit commands"
+  - "Artifacts follow project conventions for generated outputs and figures"
