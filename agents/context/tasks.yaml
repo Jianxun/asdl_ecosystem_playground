@@ -1,127 +1,19 @@
-schema_version: 2
+schema_version: 3
 
 current_sprint:
-  - id: T-010
-    title: Bootstrap hello-flow with GF180 inverter on Xyce
-    owner: Executor
-    dod: >
-      Build a minimal GF180 CMOS inverter experiment (`inv_dc`) in
-      `libs/exp_010_hello_xyce/` with one DUT and one DC testbench. Run the full
-      loop (compile, Xyce simulate, RAW to HDF5 normalization). Capture exact
-      commands and first-run friction in a report.
-    verify:
-      - ./venv/bin/asdlc netlist libs/exp_010_hello_xyce/tb.asdl --backend sim.xyce
-      - ./venv/bin/python analysis/tools/xyce/raw_to_h5.py runs/exp_010_hello_xyce/<run_id>/tb.spice.raw
-    links:
-      scratchpad: agents/scratchpads/T-010_hello_xyce.md
-    files:
-      - libs/exp_010_hello_xyce/
-      - runs/
-      - docs/
-
-  - id: T-011
-    title: Evaluate import ergonomics with 5T OTA chain
-    owner: Executor
-    depends_on:
-      - T-010
-    dod: >
-      Build a 5-transistor OTA experiment (`ota_5t_op`) that explicitly imports
-      from `libs_common/`, `libs/`, and `pdks/`. Document where agents hit import
-      ambiguity and produce one import-style guideline update in
-      `agents/instructions/`.
-    verify:
-      - ./venv/bin/asdlc netlist libs/exp_011_imports/tb.asdl --backend sim.xyce
-    links:
-      scratchpad: agents/scratchpads/T-011_imports_ergonomics.md
-    files:
-      - libs/exp_011_imports/
-      - agents/instructions/
-      - docs/
-
-  - id: T-012
-    title: Evaluate parameterization ergonomics with current mirror array
-    owner: Executor
-    depends_on:
-      - T-010
-    dod: >
-      Build a parameterized current mirror array experiment
-      (`current_mirror_sweep`) with at least two meaningful parameters (for
-      example device width and mirror multiplicity) and one DC sweep. Run
-      simulation and normalization, then distill parameter naming/default
-      conventions for agents.
-    verify:
-      - ./venv/bin/asdlc netlist libs/exp_012_params/tb.asdl --backend sim.xyce
-      - xyce runs/exp_012_params/<run_id>/tb.spice
-      - ./venv/bin/python analysis/tools/xyce/raw_to_h5.py runs/exp_012_params/<run_id>/tb.spice.raw
-    links:
-      scratchpad: agents/scratchpads/T-012_params_sweeps.md
-    files:
-      - libs/exp_012_params/
-      - docs/
-      - agents/instructions/snippets.md
-
-  - id: T-013
-    title: Standardize OP inspection with switched transmission gate cell
-    owner: Executor
-    depends_on:
-      - T-010
-    dod: >
-      Build a switched transmission gate OP experiment (`tgate_op_debug`) from
-      the switch-matrix library style, then produce deterministic commands that
-      use `raw_to_h5.py` and `format_xyce_op_csv.py`. Document a compact
-      OP-inspection recipe in the instruction pack.
-    verify:
-      - ./venv/bin/python analysis/tools/xyce/raw_to_h5.py runs/exp_013_op/<run_id>/tb.spice.raw
-      - ./venv/bin/python analysis/tools/xyce/format_xyce_op_csv.py runs/exp_013_op/<run_id>/tb.spice.FD.prn
-    links:
-      scratchpad: agents/scratchpads/T-013_op_normalization.md
-    files:
-      - libs/exp_013_op/
-      - analysis/tools/xyce/
-      - agents/instructions/tooling.md
-      - docs/
+  - id: T-017
+    title: Refine OpenCode event heuristics from lab-01 executor telemetry
+    status: ready
+    pr: null
+    merged: false
+    owner: Architect
+    execplan: agents/plans/t-017-event-heuristics.md
 
 backlog:
-  - id: T-014
-    title: Build failure-mode cookbook for agent triage
+  - id: T-016
+    title: Create and validate lab-01 RC low-pass teaching lab
+    status: ready_for_review
+    pr: 4
+    merged: false
     owner: Executor
-    depends_on:
-      - T-010
-      - T-011
-    dod: >
-      Intentionally trigger at least five common failure classes (import, net,
-      model/include, simulation, post-processing) using the fixed experiment set:
-      `inv_dc`, `ota_5t_op`, `current_mirror_sweep`, and `tgate_op_debug`.
-      Document fastest recovery paths in `agents/instructions/debugging.md`.
-    verify:
-      - ./venv/bin/python agents/scripts/lint_tasks_state.py
-    links:
-      scratchpad: agents/scratchpads/T-014_failure_cookbook.md
-    files:
-      - agents/instructions/debugging.md
-      - docs/
-
-  - id: T-015
-    title: Extract orchestration requirements from experiment findings
-    owner: Architect
-    depends_on:
-      - T-010
-      - T-011
-      - T-012
-      - T-013
-    dod: >
-      Synthesize findings into a requirement brief for the next-generation
-      simulation orchestrator (separate from legacy `simorc`) including required
-      UX flows, interfaces, and non-goals.
-    verify:
-      - ./venv/bin/python agents/scripts/lint_tasks_state.py
-    links:
-      scratchpad: agents/scratchpads/T-015_orchestrator_requirements.md
-    files:
-      - docs/
-      - agents/context/contract.md
-      - agents/context/project_status.md
-
-exploration_candidates:
-  - Run one fresh-agent dry run using only `agents/instructions/` and log misses.
-  - Compare direct CLI loops vs scripted wrappers to define orchestration boundaries.
+    execplan: agents/plans/lab-01-rc-lowpass.md

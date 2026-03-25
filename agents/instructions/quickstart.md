@@ -11,11 +11,11 @@ From repo root:
 ```bash
 ./venv/bin/python --version
 asdlc --help
-xyce -v
+ngspice -v
 ./venv/bin/python -c "import numpy, h5py; print('ok')"
 ```
 
-If `xyce` is missing, stop and note the missing dependency in the experiment report.
+If `ngspice` is missing, stop and note the missing dependency in the lab report.
 
 If the Python dependency check fails, install in the local venv:
 
@@ -23,29 +23,29 @@ If the Python dependency check fails, install in the local venv:
 ./venv/bin/pip install numpy h5py
 ```
 
-## 2) Pick or create an experiment library
+## 2) Pick or create a lab
 
-- Canonical location: `libs/<experiment_name>/`
-- Keep only source assets in `libs/` (`.asdl`, bench configs, small notes).
-- Put generated outputs in `runs/<experiment_name>/<run_id>/`.
+- Canonical location: `labs/<lab-id>/`
+- Keep source assets under `labs/<lab-id>/asdl/` and scripts under `labs/<lab-id>/scripts/`.
+- Put generated outputs under `labs/<lab-id>/artifacts/` (single overwriteable baseline is acceptable).
 
 ## 3) Compile
 
 ```bash
-asdlc netlist libs/<experiment_name>/tb.asdl --backend sim.xyce
+asdlc netlist labs/<lab-id>/asdl/tb.asdl --backend sim.ngspice
 ```
 
-## 4) Run simulation (Xyce default)
+## 4) Run simulation (ngspice default)
 
 ```bash
-xyce runs/<experiment_name>/<run_id>/tb.spice
+ngspice -b -o labs/<lab-id>/artifacts/ngspice.log labs/<lab-id>/artifacts/tb.spice
 ```
 
 ## 5) Normalize outputs
 
 ```bash
-./venv/bin/python analysis/tools/xyce/raw_to_h5.py runs/<experiment_name>/<run_id>/tb.spice.raw
-./venv/bin/python analysis/tools/xyce/format_xyce_op_csv.py runs/<experiment_name>/<run_id>/tb.spice.FD.prn
+./venv/bin/python analysis/tools/ngspice/normalize_raw.py --input labs/<lab-id>/artifacts/tb.raw --output labs/<lab-id>/artifacts/tb.hdf5
+./venv/bin/python labs/<lab-id>/scripts/plot_from_hdf5.py --input labs/<lab-id>/artifacts/tb.hdf5 --out labs/<lab-id>/figures
 ```
 
 ## 6) Record findings

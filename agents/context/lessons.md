@@ -1,8 +1,10 @@
 # Lessons
 
 ## Pending additions
-- Keep generated simulation artifacts out of source library directories; write them to `runs/`.
-- Treat `pdks/` and `libs_common/` as shared infrastructure, and keep experiment code under `libs/`.
+- Prefer self-contained lab artifacts under `labs/<lab-id>/artifacts/`; overwrite-in-place baseline is acceptable for now.
+- Keep session telemetry archive at repo root `archive/` and out of git.
+- Use `./agents/scripts/run_opencode_ingestion.sh` as the canonical ingestion entrypoint.
+- For `history.py`, place global flags (`--project`, `--events-root`) before subcommands.
 
 [T-010][executor]: Use `sim.save sim_type=<analysis>` for Xyce saves; `sim.save_dc` is not a valid primitive and fails compile.
 [T-010][executor]: Add `h5py` to venv bootstrap checks because `raw_to_h5.py` depends on both `h5py` and `numpy`.
@@ -14,3 +16,5 @@
 [T-011][executor]: Xyce source primitives in emitted netlists may not accept symbolic `dc` values reliably in this flow; numeric literals are safer for voltage/current source setup.
 [T-011][executor]: ASDL `modules.tb.variables` values substitute correctly for source parameters when referenced as `{VDD}`/`{VCM}`; unbraced symbols are emitted literally.
 [T-011][executor]: `save_op` should emit `.PRINT DC FORMAT=CSV N(*)`; without `DC`, Xyce rejects the statement as analysis/print mismatch.
+[T-016][review]: Event telemetry includes high-value friction signals from long/chained shell commands; these should be first-class heuristics in normalization output.
+[T-016][review]: Not all `tool_failure` events are equally actionable; rank failures by diagnostic payload quality before promotion.

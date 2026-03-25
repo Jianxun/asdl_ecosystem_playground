@@ -1,5 +1,6 @@
 # Generated run artifacts
 runs/
+archive/
 
 # Python
 __pycache__/
@@ -14,3 +15,8 @@ venv/
 
 # Tool logs
 *.log.json
+
+# Local simulator artifacts
+*.raw
+*.hdf5
+*.h5

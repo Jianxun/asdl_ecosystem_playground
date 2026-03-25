@@ -34,7 +34,7 @@
   - `libs/exp_010_hello_xyce/inv.asdl`
   - `libs/exp_010_hello_xyce/tb.asdl`
 - Added experiment report:
-  - `docs/exp_010_hello_xyce_2026-03-01.md`
+  - `libs/exp_010_hello_xyce/notes/exp_010_hello_xyce_2026-03-01.md`
 - Updated hydration pack guidance:
   - `agents/instructions/quickstart.md`
   - `agents/instructions/snippets.md`

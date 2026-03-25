@@ -1,0 +1,211 @@
+# Deliver Lab-01 RC Low-Pass
+
+## Purpose / Big Picture
+
+Create the first curriculum lab (`lab-01-rc-lowpass`) as a publishable teaching unit that demonstrates first-order low-pass behavior and the bandwidth-versus-settling tradeoff. The outcome is a complete lab package under `labs/lab-01-rc-lowpass/` with ASDL sources, analysis/plot scripts, generated figures, and a markdown write-up that quantitatively compares theory and simulation within explicit tolerances.
+
+## Progress
+
+- [x] 2026-03-24 00:00Z Architect created task `T-016` and this ExecPlan.
+- [x] 2026-03-25 00:47Z Built `labs/lab-01-rc-lowpass/` scaffold (`asdl/`, `scripts/`, `figures/`) and `metadata.yaml`.
+- [x] 2026-03-25 00:50Z Implemented AC and transient ASDL benches (`tb.asdl`, `tb_tran.asdl`) plus local source primitive; compile sanity checks passed.
+- [x] 2026-03-25 00:50Z Ran Xyce simulations into deterministic run folder `runs/lab-01-rc-lowpass/20260324-baseline/`.
+- [x] 2026-03-25 00:52Z Implemented `postprocess.py` and `plot.py`; generated figures and derived datasets.
+- [x] 2026-03-25 00:54Z Completed `labs/lab-01-rc-lowpass/lab.md` with theory, setup, results, quantitative table, and friction log.
+- [x] 2026-03-25 00:55Z Validated tolerance checks; updated curriculum status and task execution state.
+- [x] 2026-03-25 01:01Z Pushed branch `feat/lab-01-rc-lowpass` and opened PR `https://github.com/Jianxun/asdl_ecosystem_playground/pull/4`.
+
+## Surprises & Discoveries
+
+- First Xyce run with both AC and TRAN `.PRINT` directives in one deck failed with:
+  - `Netlist error: Analysis type AC and print type TRAN are inconsistent.`
+- Splitting analyses into two benches (`tb.asdl` for AC and `tb_tran.asdl` for transient) resolved the issue.
+
+## Decision Log
+
+- Decision: Use `lab-01-rc-lowpass` as the first lab because its closed-form theory (`f_c = 1 / (2*pi*R*C)`) is simple and ideal for setting curriculum quality standards.
+  - Rationale: Minimizes modeling ambiguity while exercising the full author -> compile -> simulate -> analyze -> explain loop.
+- Decision: Include both AC sweep and transient step response in one lab.
+  - Rationale: AC validates cutoff behavior; transient shows the practical settling-speed tradeoff.
+- Decision: Set initial quantitative acceptance tolerances to `+-5%` on cutoff frequency and `+-10%` on measured time constant.
+  - Rationale: Tight enough to enforce rigor, loose enough for simulator discretization and extraction choices.
+
+## Outcomes & Retrospective
+
+Planned outcomes:
+
+- A novice can run copy-paste commands from repo root and regenerate all figures.
+- The lab clearly teaches both theory and practical tradeoff (frequency shaping vs response speed).
+- At least one reusable workflow improvement or friction note is captured for `agents/instructions/`.
+
+Retrospective notes will be filled after execution with evidence-backed outcomes.
+
+Observed outcomes:
+
+- Reproducibility objective met: all lab artifacts regenerate from repo root with explicit commands.
+- Teaching objective met: both cutoff behavior and settling response are demonstrated quantitatively.
+- Guidance objective met: debugging instruction updated with analysis/print mismatch fix pattern.
+
+## Context and Orientation
+
+This plan follows:
+
+- `agents/prompts/workflows/execplan.md` for execution-plan structure.
+- `agents/prompts/workflows/lab.md` for lab deliverables and section contract.
+- `agents/context/objectives.md` and `agents/context/curriculum.md` for project-level direction.
+
+Target paths:
+
+- Lab root: `labs/lab-01-rc-lowpass/`
+- Run root: `runs/lab-01-rc-lowpass/<run_id>/`
+- Task row: `agents/context/tasks.yaml` (`T-016`)
+
+## Plan of Work
+
+1. Scaffold the lab directory with `asdl/`, `scripts/`, `figures/`, and metadata.
+2. Author the RC low-pass ASDL bench and ensure compile/sim commands are explicit.
+3. Produce analysis outputs: extract cutoff/time-constant metrics and generate plots.
+4. Write a teaching-oriented `lab.md` that integrates theory and simulation evidence.
+5. Run validation commands end-to-end and record outputs, tolerances, and friction.
+6. Update curriculum/task status for reviewer-ready handoff.
+
+## Concrete Steps
+
+1. Create lab scaffold files:
+   - `labs/lab-01-rc-lowpass/metadata.yaml`
+   - `labs/lab-01-rc-lowpass/asdl/tb.asdl`
+   - `labs/lab-01-rc-lowpass/scripts/postprocess.py`
+   - `labs/lab-01-rc-lowpass/scripts/plot.py`
+   - `labs/lab-01-rc-lowpass/lab.md`
+2. Define baseline parameters in both metadata and ASDL bench (example: `R=1k`, `C=1n`, expected `f_c ~ 159.15 kHz`).
+3. Compile sanity check from repo root:
+   - `asdlc netlist labs/lab-01-rc-lowpass/asdl/tb.asdl --backend sim.xyce`
+4. Choose run id format `<YYYYMMDD>-baseline` and compile netlist to run folder:
+   - `asdlc netlist labs/lab-01-rc-lowpass/asdl/tb.asdl --backend sim.xyce -o runs/lab-01-rc-lowpass/<run_id>/tb.spice`
+5. Simulate:
+   - `xyce runs/lab-01-rc-lowpass/<run_id>/tb.spice`
+6. Normalize simulator outputs (if generated by bench directives):
+   - `./venv/bin/python analysis/tools/xyce/raw_to_h5.py runs/lab-01-rc-lowpass/<run_id>/tb.spice.raw`
+   - `./venv/bin/python analysis/tools/xyce/format_xyce_op_csv.py runs/lab-01-rc-lowpass/<run_id>/tb.spice.FD.prn`
+7. Run lab post-processing and plotting:
+   - `./venv/bin/python labs/lab-01-rc-lowpass/scripts/postprocess.py --run runs/lab-01-rc-lowpass/<run_id> --out labs/lab-01-rc-lowpass/figures/data`
+   - `./venv/bin/python labs/lab-01-rc-lowpass/scripts/plot.py --data labs/lab-01-rc-lowpass/figures/data --out labs/lab-01-rc-lowpass/figures`
+8. Fill `labs/lab-01-rc-lowpass/lab.md` using the required section order from `agents/prompts/workflows/lab.md`, including a quantitative comparison table.
+9. Record first failing command (if any), exact error text, and fix in the lab friction section.
+10. Update `agents/context/curriculum.md` status for `lab-01-rc-lowpass` (`planned` -> `drafting`/`review` as appropriate) and task status in `tasks.yaml`.
+
+## Validation and Acceptance
+
+Run from repo root and record outputs/paths in scratchpad or plan notes:
+
+- `asdlc netlist labs/lab-01-rc-lowpass/asdl/tb.asdl --backend sim.xyce`
+  - Expectation: exits `0`; no unresolved symbol/import errors.
+- `xyce runs/lab-01-rc-lowpass/<run_id>/tb.spice`
+  - Expectation: exits `0`; output files created in run folder.
+- `./venv/bin/python labs/lab-01-rc-lowpass/scripts/postprocess.py ...`
+  - Expectation: writes derived metrics dataset (CSV/JSON) under `labs/lab-01-rc-lowpass/figures/data/`.
+- `./venv/bin/python labs/lab-01-rc-lowpass/scripts/plot.py ...`
+  - Expectation: writes figure PNGs referenced by `labs/lab-01-rc-lowpass/lab.md`.
+
+Acceptance criteria:
+
+- `labs/lab-01-rc-lowpass/lab.md` includes theory, setup, figures, and tradeoff discussion.
+- Theory-vs-simulation table includes at least cutoff frequency and one transient metric.
+- Cutoff-frequency error is within `+-5%`.
+- Time-constant-related metric (for example `63%` rise/decay point) is within `+-10%`.
+- Friction log includes first failure (or explicitly states none observed).
+
+Execution evidence:
+
+- `asdlc netlist labs/lab-01-rc-lowpass/asdl/tb.asdl --backend sim.xyce`
+  - observed: exit `0`.
+- `asdlc netlist labs/lab-01-rc-lowpass/asdl/tb_tran.asdl --backend sim.xyce`
+  - observed: exit `0`.
+- `xyce runs/lab-01-rc-lowpass/20260324-baseline/tb.spice`
+  - observed: exit `0`; produced `tb.spice.FD.csv`.
+- `xyce runs/lab-01-rc-lowpass/20260324-baseline/tb_tran.spice`
+  - observed: exit `0`; produced `tb_tran.spice.csv`.
+- `./venv/bin/python labs/lab-01-rc-lowpass/scripts/postprocess.py --run runs/lab-01-rc-lowpass/20260324-baseline --out labs/lab-01-rc-lowpass/figures/data`
+  - observed: exit `0`; wrote `metrics.json`, `theory_vs_sim.csv`, `ac_response.csv`, `transient_response.csv`.
+- `./venv/bin/python labs/lab-01-rc-lowpass/scripts/plot.py --data labs/lab-01-rc-lowpass/figures/data --out labs/lab-01-rc-lowpass/figures`
+  - observed: exit `0`; wrote `fig1_ac_response.png`, `fig2_transient_step.png`.
+
+## Idempotence and Recovery
+
+- Commands are idempotent when re-run with the same `<run_id>` if files are overwritten deterministically.
+- If run artifacts are stale/inconsistent, recover by selecting a new `<run_id>` and re-running compile -> simulate -> postprocess -> plot.
+- If compilation fails, stop before simulation; fix ASDL/import/model issues first and re-run step 3.
+- If simulation succeeds but post-processing fails, preserve run folder and debug scripts against recorded artifact filenames.
+- If tolerance checks fail, treat as analysis failure: inspect extraction method, step resolution, and theory assumptions before changing tolerances.
+
+## Artifacts and Notes
+
+Expected source artifacts:
+
+- `labs/lab-01-rc-lowpass/metadata.yaml`
+- `labs/lab-01-rc-lowpass/asdl/tb.asdl`
+- `labs/lab-01-rc-lowpass/scripts/postprocess.py`
+- `labs/lab-01-rc-lowpass/scripts/plot.py`
+- `labs/lab-01-rc-lowpass/lab.md`
+
+Expected generated artifacts:
+
+- `runs/lab-01-rc-lowpass/<run_id>/tb.spice`
+- `runs/lab-01-rc-lowpass/<run_id>/tb.spice.raw`
+- `runs/lab-01-rc-lowpass/<run_id>/tb.spice.FD.prn` (when applicable)
+- `labs/lab-01-rc-lowpass/figures/fig1_*.png`
+- `labs/lab-01-rc-lowpass/figures/fig2_*.png`
+- `labs/lab-01-rc-lowpass/figures/data/*`
+
+## Interfaces and Dependencies
+
+- Toolchain: `asdlc`, `xyce`, `./venv/bin/python`.
+- Analysis dependencies: `numpy`, `h5py`, and plotting dependency used by lab scripts.
+- Shared assets may reference `libs_common/` and PDK/lib roots via `.asdlrc`.
+- Guidance dependencies: `agents/prompts/workflows/lab.md`, `agents/instructions/playbook.md`, `agents/instructions/workflow.md`.
+
+## Final Reflection Round
+
+### Outcome
+- Lab package `lab-01-rc-lowpass` is fully authored and reproducible with AC and transient evidence.
+- Theory checks pass with wide margin: cutoff error `+0.0020%`, time-constant error `-0.0032%`.
+- Ready for reviewer handoff with open PR `https://github.com/Jianxun/asdl_ecosystem_playground/pull/4`.
+
+### What Changed
+- Added lab source tree under `labs/lab-01-rc-lowpass/` including metadata, ASDL benches, scripts, figures, and write-up.
+- Added local source primitive (`asdl/stimuli.asdl`) and split AC/transient benches to satisfy Xyce analysis-print compatibility.
+- Updated curriculum status for `lab-01-rc-lowpass` from `planned` to `review`.
+- Updated debugging guidance with a concrete fix for mixed-analysis print mismatch errors.
+
+### Key Decisions and Trade-offs
+- Kept AC and transient runs as separate benches rather than forcing both analyses into one deck.
+  - Trade-off: one extra netlist/command, but significantly better simulator compatibility and clearer artifacts.
+- Used CSV `.PRINT` outputs for deterministic parsing in lab scripts.
+  - Trade-off: skipped RAW/HDF5 conversion for this lab, but simplified novice reproducibility.
+
+### Lessons Learned
+- Simulator constraints matter for pedagogical flow: keeping one analysis per deck avoids avoidable first-run confusion.
+- Quantitative checks are straightforward when scripts emit both machine-readable metrics (`metrics.json`) and table-ready CSV.
+
+### Memories to Promote
+- Promote to `agents/instructions/debugging.md`: split mixed AC/TRAN `.PRINT` decks when Xyce reports analysis/print inconsistency.
+
+### Frictions and Complaints
+- Xyce error message is clear but appears late (runtime), so authors can waste a cycle before discovering mixed-analysis limitation.
+
+### Improvement Proposals
+- Add a short quickstart/debugging snippet showing canonical two-deck pattern for labs requiring AC plus transient plots.
+- Consider a small validation helper that checks analysis and print-type consistency in emitted decks before running Xyce.
+
+### Evidence
+- Run artifacts: `runs/lab-01-rc-lowpass/20260324-baseline/tb.spice`, `runs/lab-01-rc-lowpass/20260324-baseline/tb_tran.spice`, `runs/lab-01-rc-lowpass/20260324-baseline/tb.spice.FD.csv`, `runs/lab-01-rc-lowpass/20260324-baseline/tb_tran.spice.csv`.
+- Derived metrics: `labs/lab-01-rc-lowpass/figures/data/metrics.json`, `labs/lab-01-rc-lowpass/figures/data/theory_vs_sim.csv`.
+- Figures: `labs/lab-01-rc-lowpass/figures/fig1_ac_response.png`, `labs/lab-01-rc-lowpass/figures/fig2_transient_step.png`.
+- Write-up: `labs/lab-01-rc-lowpass/lab.md`.
+- PR: `https://github.com/Jianxun/asdl_ecosystem_playground/pull/4`.
+
+### Next Steps
+- Reviewer should verify pedagogical clarity and command replay from clean clone.
+- Merge after review if teaching narrative and reproducibility checks are accepted.
+
+Revision note (2026-03-25): Updated progress, discoveries, validation evidence, and final reflection after full lab execution; documented Xyce mixed-analysis fix and resulting two-bench workflow.

@@ -35,6 +35,8 @@ Fast triage path for agent-run ASDL experiments.
   - Reduce stimulus aggressiveness, check initial conditions, simplify bench.
 - Empty/unexpected outputs:
   - Verify `.PRINT`/save directives and analysis statements.
+- Analysis/print mismatch error:
+  - If Xyce reports `Analysis type <A> and print type <B> are inconsistent`, split mixed analyses into separate decks (for example one AC deck and one TRAN deck) so each `.PRINT` matches the active analysis.
 
 ## Post-processing failure checklist
 

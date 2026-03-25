@@ -19,7 +19,8 @@ modules:
       dut: dutlib.ideal_gm_cell gm={GM} ro={RO} cin={CIN}
 
       vinp: ana.vac dc=0 ac_mag=0 ac_phase=0
-      vtest: ana.idc dc=0
+      vshort: ana.vdc dc=0
+      vsense: ana.vdc dc=0
       itest: ana.iac dc=0 ac_mag=1 ac_phase=0
       cload: ana.cap value={CLOAD}
 
@@ -28,6 +29,7 @@ modules:
 
     nets:
       inp: [vinp.p, dut.inp]
-      out_side: [dut.out, cload.p, vtest.p, itest.p]
-      inn_side: [dut.inn, vtest.n, itest.n]
-      '0': [vinp.n, dut.vss, cload.n]
+      out_side: [dut.out, cload.p, vshort.p, itest.n]
+      inj_n: [itest.p, vsense.p]
+      inn_side: [dut.inn, vshort.n]
+      '0': [vinp.n, dut.vss, cload.n, vsense.n]

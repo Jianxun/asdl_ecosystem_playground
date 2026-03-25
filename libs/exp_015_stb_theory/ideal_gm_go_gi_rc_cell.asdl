@@ -1,0 +1,22 @@
+imports:
+  ana: analoglib.asdl
+
+modules:
+  ideal_gm_go_gi_rc_cell:
+    parameters:
+      gm: 1e-3
+      ro: 5k
+      ri: 10k
+      cout: 1p
+      cin: 1p
+    instances:
+      gmv: ana.vccs gm=gm
+      rout: ana.res value=ro
+      rin: ana.res value=ri
+      c_out: ana.cap value=cout
+      c_in: ana.cap value=cin
+    nets:
+      $out: [gmv.p, rout.p, c_out.p]
+      $vss: [gmv.n, rout.n, rin.n, c_out.n, c_in.n]
+      $inp: [gmv.cn]
+      $inn: [gmv.cp, rin.p, c_in.p]

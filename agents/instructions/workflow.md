@@ -1,13 +1,13 @@
 # Workflow
 
-Canonical loop for ASDL Playground experiments.
+Canonical loop for ASDL Playground labs.
 
 Execution policy and command conventions are defined in `playbook.md`.
 
 ## Intent
 
 This is a playground for ergonomics and agent usability, not a conformance test suite.
-Each experiment should answer one practical question about authoring or tooling UX.
+Each lab should answer one practical question about authoring or tooling UX.
 
 ## Loop
 
@@ -16,27 +16,27 @@ Each experiment should answer one practical question about authoring or tooling 
 2. **Author minimal ASDL**
    - Add/modify only what is needed to answer the question.
 3. **Compile sanity check**
-   - Run `asdlc netlist ... --backend sim.xyce` first to catch authoring errors quickly.
-4. **Compile to run folder**
-   - Emit netlist to `runs/<experiment>/<run_id>/tb.spice` for reproducibility.
+   - Run `asdlc netlist ... --backend sim.ngspice` first to catch authoring errors quickly.
+4. **Compile to local artifact folder**
+   - Emit netlist to `labs/<lab-id>/artifacts/tb.spice`.
 5. **Simulate**
-   - Run Xyce and collect raw outputs in `runs/`.
+   - Run ngspice and collect raw outputs in `labs/<lab-id>/artifacts/`.
 6. **Normalize**
-   - Convert outputs to analysis-friendly formats (HDF5 / pivoted CSV).
+   - Convert RAW to HDF5 using the canonical ngspice normalizer.
 7. **Analyze**
    - Verify expected behavior and note friction.
 8. **Distill**
    - Capture lessons, snippets, and workflow improvements.
 
-## Required outputs per experiment
+## Required outputs per lab
 
-- one source library under `libs/<experiment_name>/`
-- one reproducible run folder under `runs/<experiment_name>/<run_id>/`
-- one report in `docs/`
+- one source library under `labs/<lab-id>/`
+- one local artifact set under `labs/<lab-id>/artifacts/`
+- one lab write-up under `labs/<lab-id>/lab.md`
 - one or more updates to `agents/instructions/` if new guidance emerges
 
 ## Scope control
 
 - Prefer short, focused experiments over broad sweeps.
-- Avoid introducing framework-level abstractions before two or more experiments need them.
+- Avoid introducing framework-level abstractions before two or more labs need them.
 - When uncertain, choose explicit commands over hidden automation.

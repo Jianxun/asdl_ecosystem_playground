@@ -1,0 +1,35 @@
+top: tb
+
+imports:
+  dutlib: ./ideal_gm_go_gi_cell.asdl
+  ana: analoglib.asdl
+  sim: simulation.xyce.asdl
+
+modules:
+  tb:
+    variables:
+      GM: 1e-3
+      GO: 2e-4
+      GI: 1e-4
+      RO: 5k
+      RI: 10k
+      ITEST: 1
+    instances:
+      dut: dutlib.ideal_gm_go_gi_cell gm={GM} ro={RO} ri={RI}
+
+      vinp: ana.vdc dc=0
+      vs_out: ana.vdc dc=0
+      vs_in: ana.vdc dc=0
+      itest: ana.idc dc={ITEST}
+      vsense: ana.vdc dc=0
+
+      dc1: sim.dc vsrc=vinp from=0 to=0 step=1
+      save_dc: sim.save sim_type=DC signals='V(*) I(*)'
+
+    nets:
+      inp: [vinp.p, dut.inp]
+      x: [vs_out.p, vs_in.p, itest.n]
+      out_side: [dut.out, vs_out.n]
+      inn_side: [dut.inn, vs_in.n]
+      inj_n: [itest.p, vsense.p]
+      '0': [vinp.n, dut.vss, vsense.n]

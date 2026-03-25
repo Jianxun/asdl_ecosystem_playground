@@ -10,9 +10,10 @@ modules:
     instances:
       gmv: ana.vccs gm=gm
       rout: ana.res value=ro
-      cin_diff: ana.cap value=cin
+      cin_inp: ana.cap value=cin
+      cin_inn: ana.cap value=cin
     nets:
       $out: [gmv.p, rout.p]
-      $vss: [gmv.n, rout.n]
-      $inp: [gmv.cn, cin_diff.p]
-      $inn: [gmv.cp, cin_diff.n]
+      $vss: [gmv.n, rout.n, cin_inp.n, cin_inn.n]
+      $inp: [gmv.cn, cin_inp.p]
+      $inn: [gmv.cp, cin_inn.p]

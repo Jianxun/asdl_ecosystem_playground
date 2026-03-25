@@ -24,3 +24,7 @@ These files are the hydration pack for agents working in ASDL Playground.
 - Keep agent behavior consistent across sessions.
 - Reduce startup friction for ASDL author -> compile -> simulate -> analyze loops.
 - Capture ergonomics findings that inform next-generation orchestration (separate from legacy `asdl_ecosystem/simorc`).
+
+## Related workflow prompts
+
+- Session ingestion workflow: `agents/prompts/workflows/session_ingestion.md`

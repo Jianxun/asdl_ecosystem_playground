@@ -1,0 +1,46 @@
+{
+  "file_count": 7,
+  "files": [
+    {
+      "bytes": 1690,
+      "path": "README.md",
+      "sha256": "bf030c4e0c5c9ce75ad565b2ad12f9be490b672364f445be8475a9e20d784173"
+    },
+    {
+      "bytes": 6053,
+      "path": "bin/history.py",
+      "sha256": "7f819ae4c7c87aca56eb8e4399e15c70ac888b529876a4e7ee6ac148f684cba8"
+    },
+    {
+      "bytes": 37820,
+      "path": "bin/ingest_raw.py",
+      "sha256": "41c778c9ec3725dc06a42091b7ebaf24f2f1c930af014a42c99f724e28a046fc"
+    },
+    {
+      "bytes": 27611,
+      "path": "bin/normalize_events.py",
+      "sha256": "05ea8f4bee513db9ae1e823a6d4aaeba0549f9c3e09edb08052f795b4add51d4"
+    },
+    {
+      "bytes": 8092,
+      "path": "bin/validate_events.py",
+      "sha256": "f8cf231168af7592ca5de8e36a2b230470e6c2f3f8bc30661c8d104b92b78abc"
+    },
+    {
+      "bytes": 4331,
+      "path": "doc/schemas/opencode_event_v0.md",
+      "sha256": "9e6ab0953a850cfd5787cf16ddc0862242709dae320c915e0e670940a83991c4"
+    },
+    {
+      "bytes": 5241,
+      "path": "doc/schemas/opencode_raw_ingestion_v0.md",
+      "sha256": "640be2ec027a7102bdecfd6ed95b266a73cec17dea905e4774e21b71ddbab2d2"
+    }
+  ],
+  "generated_at": "2026-03-25T03:56:33Z",
+  "packet_name": "opencode_session_pipeline",
+  "packet_version": "v0.1.0",
+  "schema_version": "opencode_portable_packet_manifest_v1",
+  "source_git_head": "8645418fae5f0d946a625024adf5d506d99e65bc",
+  "source_repo_root": "/Users/jianxunzhu/Developer/trail_blazer"
+}

@@ -1,0 +1,34 @@
+top: tb
+
+imports:
+  dutlib: ./ideal_gm_go_gi_rc_cell.asdl
+  prolib: ./stb_probe.asdl
+  ana: analoglib.asdl
+  sim: simulation.xyce.asdl
+
+modules:
+  tb:
+    variables:
+      GM: 1e-3
+      RO: 5k
+      RI: 10k
+      COUT: 1p
+      CIN: 1p
+      AC_POINTS: 200
+      AC_START: 1
+      AC_STOP: 1e11
+      VTEST_AC: 1
+      ITEST_AC: 0
+    instances:
+      dut: dutlib.ideal_gm_go_gi_rc_cell gm={GM} ro={RO} ri={RI} cout={COUT} cin={CIN}
+      vinp: ana.vac dc=0 ac_mag=0 ac_phase=0
+      probe: prolib.stb_probe vtest_ac={VTEST_AC} itest_ac={ITEST_AC}
+
+      ac1: sim.ac sweep_type=DEC points={AC_POINTS} start_freq={AC_START} end_freq={AC_STOP}
+      save_ac: sim.save sim_type=AC signals='V(*) I(*)'
+
+    nets:
+      inp: [vinp.p, dut.inp]
+      out_side: [dut.out, probe.out]
+      inn_side: [dut.inn, probe.in]
+      '0': [vinp.n, dut.vss]

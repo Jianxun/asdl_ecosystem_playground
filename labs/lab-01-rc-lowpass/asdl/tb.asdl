@@ -1,0 +1,28 @@
+top: tb
+
+imports:
+  ana: analoglib.asdl
+  sim: simulation.xyce.asdl
+  stim: ./stimuli.asdl
+
+modules:
+  tb:
+    variables:
+      R: 1k
+      C: 1n
+      AC_POINTS: 100
+      AC_START: 1e2
+      AC_STOP: 1e8
+
+    instances:
+      vin: stim.vacpulse ac_mag=1 v1=0 v2=0 td=100e-9 tr=1e-9 tf=1e-9 pw=20e-6 per=40e-6
+      r1: ana.res value={R}
+      c1: ana.cap value={C}
+
+      ac1: sim.ac sweep_type=DEC points={AC_POINTS} start_freq={AC_START} end_freq={AC_STOP}
+      save_ac: sim.save sim_type=AC format=csv signals='V(vin) V(vout)'
+
+    nets:
+      vin: [vin.p, r1.p]
+      vout: [r1.n, c1.p]
+      '0': [vin.n, c1.n]
