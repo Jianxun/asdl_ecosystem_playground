@@ -13,6 +13,7 @@ Create the first curriculum lab (`lab-01-rc-lowpass`) as a publishable teaching 
 - [x] 2026-03-25 00:52Z Implemented `postprocess.py` and `plot.py`; generated figures and derived datasets.
 - [x] 2026-03-25 00:54Z Completed `labs/lab-01-rc-lowpass/lab.md` with theory, setup, results, quantitative table, and friction log.
 - [x] 2026-03-25 00:55Z Validated tolerance checks; updated curriculum status and task execution state.
+- [x] 2026-03-25 01:01Z Pushed branch `feat/lab-01-rc-lowpass` and opened PR `https://github.com/Jianxun/asdl_ecosystem_playground/pull/4`.
 
 ## Surprises & Discoveries
 
@@ -168,7 +169,7 @@ Expected generated artifacts:
 ### Outcome
 - Lab package `lab-01-rc-lowpass` is fully authored and reproducible with AC and transient evidence.
 - Theory checks pass with wide margin: cutoff error `+0.0020%`, time-constant error `-0.0032%`.
-- Ready for reviewer handoff once PR URL is attached.
+- Ready for reviewer handoff with open PR `https://github.com/Jianxun/asdl_ecosystem_playground/pull/4`.
 
 ### What Changed
 - Added lab source tree under `labs/lab-01-rc-lowpass/` including metadata, ASDL benches, scripts, figures, and write-up.
@@ -201,9 +202,10 @@ Expected generated artifacts:
 - Derived metrics: `labs/lab-01-rc-lowpass/figures/data/metrics.json`, `labs/lab-01-rc-lowpass/figures/data/theory_vs_sim.csv`.
 - Figures: `labs/lab-01-rc-lowpass/figures/fig1_ac_response.png`, `labs/lab-01-rc-lowpass/figures/fig2_transient_step.png`.
 - Write-up: `labs/lab-01-rc-lowpass/lab.md`.
+- PR: `https://github.com/Jianxun/asdl_ecosystem_playground/pull/4`.
 
 ### Next Steps
-- Attach PR URL after push and set task status to `ready_for_review`.
 - Reviewer should verify pedagogical clarity and command replay from clean clone.
+- Merge after review if teaching narrative and reproducibility checks are accepted.
 
 Revision note (2026-03-25): Updated progress, discoveries, validation evidence, and final reflection after full lab execution; documented Xyce mixed-analysis fix and resulting two-bench workflow.
