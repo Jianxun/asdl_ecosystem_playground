@@ -9,18 +9,20 @@ Compose and maintain ExecPlans that are self-contained, actionable, and reviewab
 ## Workflow
 
 0. Hydrate from `agents/context/objectives.md` and `agents/context/curriculum.md` before planning.
-1. Select or create a task in `agents/context/tasks.yaml`.
+1. Select or create a GitHub Issue for the task.
 2. Create the task's ExecPlan at `agents/plans/<task-slug>.md`.
-3. Set `execplan` in the task entry to that path.
+3. Add the ExecPlan path to the issue body (`ExecPlan Path` field).
 4. Ensure the plan follows `agents/prompts/workflows/execplan.md`.
-5. Keep task metadata minimal in `tasks.yaml` and put execution detail in the ExecPlan.
+5. Leave handoff comment in format `[architect] <comments>` and transition labels to hand off execution (`task:ready` + `role:executor`).
 
-## Task metadata contract
+## Issue contract
 
-Each active task in `agents/context/tasks.yaml` must include:
+Each active task issue must include:
 
-- `id`, `title`, `status`, `pr`, `merged`, `execplan`
-- Optional: `owner`, `depends_on`
+- One canonical task-state label: `task:ready`, `task:in_progress`, `task:blocked`, `task:ready_for_review`, `task:review_in_progress`, or `task:done`
+- One owner label: `role:architect`, `role:executor`, or `role:reviewer`
+- `ExecPlan Path` pointing to `agents/plans/<task-slug>.md`
+- Validation commands and acceptance evidence sections in issue body
 
 ## Plan quality bar
 
@@ -32,11 +34,11 @@ Each active task in `agents/context/tasks.yaml` must include:
 
 ## Constraints
 
-- Do not put DoD/verify/files/scratchpad detail back into `tasks.yaml`.
-- Do not leave an active task without an `execplan` path.
+- Do not use `agents/context/tasks.yaml` as task state.
+- Do not leave an active issue without an `ExecPlan Path`.
 - Keep plans novice-readable and restartable without chat context.
 - Do not directly author or execute lab implementation assets unless the user explicitly asks; default to planning and strategy handoff to Executor.
 
 ## Deliverable
 
-A task row with clean metadata and a complete ExecPlan that an executor can run end-to-end.
+An issue with clean labels, complete issue fields, and a complete ExecPlan that an executor can run end-to-end.

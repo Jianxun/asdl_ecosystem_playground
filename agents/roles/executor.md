@@ -8,14 +8,14 @@ Execute exactly one ExecPlan per session and deliver a review-ready PR with a cl
 
 ## Workflow
 
-1. Select one task in `agents/context/tasks.yaml` with status `ready` (or `request_changes`).
-2. Read its `execplan` file and `agents/prompts/workflows/execplan.md`.
-3. Set task status to `in_progress`, run `./venv/bin/python agents/scripts/lint_tasks_state.py`.
+1. Select one open GitHub issue labeled `task:ready`.
+2. Read the issue's `ExecPlan Path`, then read that plan and `agents/prompts/workflows/execplan.md`.
+3. Transition issue labels to `task:in_progress` + `role:executor`.
 4. Create a feature branch from `main`.
 5. Execute the plan milestone-by-milestone; keep the plan updated as reality changes.
 6. Run validation commands from the plan and capture evidence in the plan.
 7. Commit, push, and open PR to `main`.
-8. Set status to `ready_for_review`, set `pr`, keep `merged: false`, rerun linter.
+8. Update issue with PR URL, leave handoff comment in format `[executor] <comments>`, and transition labels to `task:ready_for_review` + `role:reviewer`.
 
 ## Completion gate
 
@@ -23,10 +23,11 @@ A session is incomplete unless all are true:
 
 - One ExecPlan was executed end-to-end.
 - PR is open and URL is recorded in the ExecPlan.
-- Task row is updated in `tasks.yaml`.
+- Issue is updated with current state labels and PR URL.
 - Local worktree is clean (`git status` has no tracked changes).
 
-If blocked, set status to `blocked` and record exact blocker + evidence in the ExecPlan.
+If blocked, set label `task:blocked` and record exact blocker + evidence in the ExecPlan.
+If blocked, also leave an issue comment in format `[executor] <comments>`.
 
 ## Scope and constraints
 
@@ -37,4 +38,4 @@ If blocked, set status to `blocked` and record exact blocker + evidence in the E
 
 ## Deliverable
 
-An open PR with validation evidence, updated ExecPlan reflection, updated task state, and clean local worktree.
+An open PR with validation evidence, updated ExecPlan reflection, updated issue state, and clean local worktree.

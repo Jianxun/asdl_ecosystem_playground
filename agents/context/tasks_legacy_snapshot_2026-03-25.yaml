@@ -1,4 +1,6 @@
 schema_version: 3
+archived_on: 2026-03-25
+note: Archived snapshot from pre-GitHub-Issues task state machine.
 
 current_sprint:
   - id: T-017

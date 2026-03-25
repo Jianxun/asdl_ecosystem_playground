@@ -4,6 +4,7 @@ Brief context record for the Architect; reconcile from task status and reviews.
 
 ## Current state
 - Canonical workflow authority is `playground/agents` with Architect/Executor/Reviewer role files active.
+- Task lifecycle authority is GitHub Issues + labels; `tasks.yaml` is retired from active state transitions.
 - Project direction is now lab-first curriculum development under `labs/`.
 - Default lab backend policy is `sim.ngspice`; labs normalize RAW -> HDF5 and plot from HDF5.
 - OpenCode session ingestion pipeline is active with repo-root archive at `archive/`.
@@ -12,7 +13,7 @@ Brief context record for the Architect; reconcile from task status and reviews.
 - Lab-01 delivery exists and is in review state (`T-016`, PR `#4`).
 
 ## Last verified status
-- `./venv/bin/python agents/scripts/lint_tasks_state.py` (passes on consolidated `tasks.yaml`)
+- `gh label list` (task/role migration labels present)
 - `./agents/scripts/run_opencode_ingestion.sh incremental` (ingest -> normalize -> validate passes)
 
 ## Next steps (1-3)

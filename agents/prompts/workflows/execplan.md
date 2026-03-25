@@ -13,6 +13,7 @@ Every ExecPlan must satisfy these requirements:
 - It describes user-visible outcomes, not just code edits.
 - It includes concrete validation commands and expected observations.
 - It records key decisions and their rationale.
+- It is linked from exactly one GitHub Issue via `ExecPlan Path`.
 
 Use plain language. Define repository-specific terms the first time they appear.
 
@@ -51,6 +52,8 @@ Validation is mandatory. Include exact commands and what success/failure looks l
 Acceptance must be observable behavior, not internal implementation claims.
 
 For execution tasks that include git closeout expectations, acceptance is incomplete until all of the following are true and recorded in the ExecPlan: feature branch exists, validation evidence is captured, branch is pushed, PR to `main` is open, and PR URL is documented.
+
+For issue-driven tasks, acceptance is also incomplete until the linked issue timeline shows the expected task-state label transitions and the PR URL is present in the issue body or comments.
 
 ## Final Reflection Round
 
