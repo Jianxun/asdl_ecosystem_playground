@@ -1,5 +1,6 @@
 # Generated run artifacts
 runs/
+archive/
 
 # Python
 __pycache__/

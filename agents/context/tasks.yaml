@@ -1,6 +1,13 @@
 schema_version: 3
 
-current_sprint: []
+current_sprint:
+  - id: T-017
+    title: Refine OpenCode event heuristics from lab-01 executor telemetry
+    status: ready
+    pr: null
+    merged: false
+    owner: Architect
+    execplan: agents/plans/t-017-event-heuristics.md
 
 backlog:
   - id: T-016

@@ -8,13 +8,15 @@
 - `agents/prompts/workflows/`: workflow prompts (including ExecPlan prompt contract).
 - `agents/plans/`: active execution plan documents.
 - `agents/scripts/`: workflow scripts (`lint_tasks_state.py`, dispatcher helpers).
+- `agents/tools/opencode_session_pipeline/`: OpenCode session ingest/normalize/validate/query pipeline.
 - `agents/scratchpads/`: per-task notes (`T-00X_*.md`).
+- `archive/`: repo-root telemetry archive for OpenCode session raw logs, canonical events, indexes, and checkpoints.
 - `labs/`: canonical teaching labs (one lab per subdirectory).
 - `libs_common/`: shared ASDL sources for common primitives/simulation helpers.
 - `pdks/`: PDK models and ASDL wrappers.
 - `examples/`: legacy/reference scratch assets.
 - `analysis/`: scripts for metric extraction and result analysis.
-- `analysis/tools/xyce/`: canonical Xyce post-processing tools (`raw_to_h5.py`, `format_xyce_op_csv.py`).
+- `analysis/tools/ngspice/`: canonical ngspice RAW normalization tools.
 - `docs/`: reports, templates, and workflow guidance.
 - `labs/<lab-id>/artifacts/`: generated lab outputs (expected git-ignored by extension).
 
@@ -24,6 +26,7 @@
 - `agents/roles/reviewer.md`: review/merge closeout protocol.
 - `agents/scripts/lint_tasks_state.py`: consolidated task metadata/state linter.
 - `agents/scripts/new_execplan.py`: creates an ExecPlan scaffold under `agents/plans/`.
+- `agents/scripts/run_opencode_ingestion.sh`: canonical one-command session ingest -> normalize -> validate.
 
 ## Quick Reference: Configuration
 - `.asdlrc`: project-level backend config/lib roots/env wiring.
@@ -31,7 +34,7 @@
 
 ## Quick Reference: Shared Libraries
 - `libs_common/analoglib.asdl`: common analog source/passive device definitions.
-- `libs_common/simulation.xyce.asdl`: simulation directive device definitions.
+- `libs_common/simulation.ngspice.asdl`: simulation directive device definitions.
 
 ## Quick Reference: PDK Assets
 - `pdks/gf180mcu/asdl/`: ASDL-facing PDK library entrypoints.
