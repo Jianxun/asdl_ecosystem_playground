@@ -12,6 +12,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -22,7 +23,7 @@ from typing import Any
 
 
 SCHEMA_VERSION = "opencode_event_v0"
-NORMALIZER_VERSION = "v0.1.0"
+NORMALIZER_VERSION = "v0.2.0"
 TOOL_FAILURE_STATUS = {"failed", "error"}
 VALIDATION_HINTS = (
     "pytest",
@@ -33,6 +34,112 @@ VALIDATION_HINTS = (
     "go test",
     "cargo test",
 )
+
+COMPILE_HINTS = ("asdlc", " netlist", "--backend")
+SIMULATE_HINTS = ("xyce", "ngspice")
+NORMALIZE_HINTS = (
+    "normalize",
+    "raw_to_h5.py",
+    "format_xyce_op_csv.py",
+    "run_opencode_ingestion.sh",
+    "validate_events.py",
+)
+PLOT_HINTS = ("plot", "matplotlib", "fig")
+
+
+def count_command_chain_segments(command_preview: str) -> int:
+    operators = re.findall(r"&&|\|\||;", command_preview)
+    return len(operators) + 1
+
+
+def detect_heredoc(command_preview: str) -> bool:
+    return bool(re.search(r"<<-?\s*[\'\"]?[A-Za-z_][A-Za-z0-9_]*", command_preview))
+
+
+def classify_command_phase(command_preview: str | None, tool: str | None) -> str:
+    if isinstance(command_preview, str) and command_preview.strip():
+        lower = command_preview.lower()
+        if "gh pr" in lower or "gh api" in lower and "/pulls" in lower:
+            return "pr"
+        if lower.lstrip().startswith("git "):
+            return "git"
+        if any(hint in lower for hint in COMPILE_HINTS):
+            return "compile"
+        if any(hint in lower for hint in SIMULATE_HINTS):
+            return "simulate"
+        if any(hint in lower for hint in NORMALIZE_HINTS):
+            return "normalize"
+        if any(hint in lower for hint in PLOT_HINTS):
+            return "plot"
+        if lower.lstrip().startswith(("python", "./venv/bin/python", "ls", "pwd", "mkdir", "rm ", "cp ", "mv ")):
+            return "meta"
+        return "unknown"
+
+    if tool in {"read", "glob", "grep", "write", "edit", "apply_patch"}:
+        return "meta"
+    return "unknown"
+
+
+def classify_failure(
+    *,
+    tool: str | None,
+    status: str | None,
+    exit_code: Any,
+    output_preview: Any,
+    command_preview: Any,
+) -> dict[str, str]:
+    output_text = output_preview.lower() if isinstance(output_preview, str) else ""
+    command_phase = classify_command_phase(command_preview if isinstance(command_preview, str) else None, tool)
+
+    if "analysis type ac and print type tran are inconsistent" in output_text:
+        return {
+            "failure_signature": "xyce.analysis_print_type_mismatch",
+            "failure_actionability": "high",
+            "failure_family": "simulate",
+        }
+    if "xyce abort" in output_text:
+        return {
+            "failure_signature": "xyce.abort",
+            "failure_actionability": "medium",
+            "failure_family": "simulate",
+        }
+    if "permission denied" in output_text:
+        return {
+            "failure_signature": "shell.permission_denied",
+            "failure_actionability": "high",
+            "failure_family": "permissions",
+        }
+    if "no such file or directory" in output_text:
+        return {
+            "failure_signature": "shell.no_such_file_or_directory",
+            "failure_actionability": "medium",
+            "failure_family": "filesystem",
+        }
+    if isinstance(exit_code, int) and exit_code == 127:
+        return {
+            "failure_signature": "shell.command_not_found",
+            "failure_actionability": "high",
+            "failure_family": "command",
+        }
+    if tool == "read" and status in TOOL_FAILURE_STATUS and output_preview is None and exit_code is None:
+        return {
+            "failure_signature": "tool.read.null_output_error",
+            "failure_actionability": "low",
+            "failure_family": "tool_io",
+        }
+    if tool == "bash" and isinstance(exit_code, int) and exit_code != 0:
+        actionability = "high" if command_phase in {"compile", "simulate", "normalize", "plot", "pr"} else "medium"
+        return {
+            "failure_signature": f"bash.exit_{exit_code}.{command_phase}",
+            "failure_actionability": actionability,
+            "failure_family": command_phase,
+        }
+
+    return {
+        "failure_signature": f"{tool or 'tool'}.generic_failure",
+        "failure_actionability": "medium" if isinstance(exit_code, int) else "low",
+        "failure_family": "unknown",
+    }
 
 
 def detect_default_project_worktree() -> str:
@@ -400,6 +507,13 @@ def normalize_session_records(session_id: str, project_label: str, records: list
             timing = state.get("time") if isinstance(state.get("time"), dict) else {}
             status = state.get("status") if isinstance(state.get("status"), str) else None
             exit_code = metadata.get("exit") if isinstance(metadata.get("exit"), int) else metadata.get("exit")
+            command_preview = inp.get("command_preview") if isinstance(inp.get("command_preview"), str) else None
+            command_len = inp.get("command_len") if isinstance(inp.get("command_len"), int) else None
+            if command_len is None and command_preview is not None:
+                command_len = len(command_preview)
+            chain_count = count_command_chain_segments(command_preview) if command_preview else None
+            has_heredoc = detect_heredoc(command_preview) if command_preview else False
+            command_phase = classify_command_phase(command_preview, data.get("tool") if isinstance(data.get("tool"), str) else None)
 
             payload = {
                 "call_id": data.get("callID"),
@@ -408,9 +522,12 @@ def normalize_session_records(session_id: str, project_label: str, records: list
                 "exit_code": exit_code,
                 "input": {
                     "description": inp.get("description"),
-                    "command_preview": inp.get("command_preview"),
+                    "command_preview": command_preview,
                     "command_sha256": inp.get("command_sha256"),
-                    "command_len": inp.get("command_len"),
+                    "command_len": command_len,
+                    "chain_count": chain_count,
+                    "has_heredoc": has_heredoc,
+                    "command_phase": command_phase,
                     "patch_sha256": inp.get("patch_sha256"),
                     "patch_len": inp.get("patch_len"),
                 },
@@ -439,6 +556,13 @@ def normalize_session_records(session_id: str, project_label: str, records: list
 
             failed = (status in TOOL_FAILURE_STATUS) or (isinstance(exit_code, int) and exit_code != 0)
             if failed:
+                failure_details = classify_failure(
+                    tool=data.get("tool") if isinstance(data.get("tool"), str) else None,
+                    status=status,
+                    exit_code=exit_code,
+                    output_preview=state.get("output_preview"),
+                    command_preview=command_preview,
+                )
                 events.append(
                     build_base_event(
                         session_id=session_id,
@@ -451,6 +575,8 @@ def normalize_session_records(session_id: str, project_label: str, records: list
                             "status": status,
                             "exit_code": exit_code,
                             "output_preview": state.get("output_preview"),
+                            "command_phase": command_phase,
+                            **failure_details,
                         },
                         raw_record=rec,
                         status="failed",

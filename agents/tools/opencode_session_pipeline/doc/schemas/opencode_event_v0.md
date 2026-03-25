@@ -43,7 +43,7 @@ Each JSONL line is one canonical event.
   "event_id": "evt_7d2f1a0e9b3c4d5e",
   "event_fingerprint": "<sha256 deterministic key>",
   "schema_version": "opencode_event_v0",
-  "normalizer_version": "v0.1.0",
+  "normalizer_version": "v0.2.0",
   "session_id": "ses_xxx",
   "project_label": "trail_blazer",
   "seq": 42,
@@ -120,10 +120,20 @@ Each JSONL line is one canonical event.
 ### `tool_execution`
 
 - include: tool name, call id, status, exit code, input/output hashes/lengths, timing
+- when command metadata is available, include deterministic command heuristics in `payload_compact.input`:
+  - `command_len`: integer command length (fallback to preview length when missing)
+  - `chain_count`: number of chained shell segments inferred from `&&`, `||`, `;`
+  - `has_heredoc`: boolean heredoc marker detection (`<<` forms)
+  - `command_phase`: one of `compile`, `simulate`, `normalize`, `plot`, `git`, `pr`, `meta`, `unknown`
 
 ### `tool_failure`
 
 - include: tool name, call id, status, exit code, output preview (if available)
+- include deterministic failure metadata for actionability triage:
+  - `failure_signature`: stable key for known failures (for example `xyce.analysis_print_type_mismatch`)
+  - `failure_actionability`: one of `high`, `medium`, `low`
+  - `failure_family`: optional grouped reporting bucket (for example `simulate`, `tool_io`)
+  - `command_phase`: command phase classification associated with the failed tool event
 
 ### `validation_result`
 

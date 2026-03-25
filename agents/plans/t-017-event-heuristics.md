@@ -8,15 +8,16 @@ Improve OpenCode event normalization so session-derived telemetry is more action
 
 - [x] 2026-03-25 00:00Z Task seeded with baseline findings and handoff context.
 - [x] 2026-03-25 09:45Z Architect refreshed context (`objectives.md`, `curriculum.md`) and upgraded this ExecPlan to execution-ready detail.
-- [ ] Implement and validate normalization updates.
-- [ ] Re-ingest/re-normalize and compare pre/post signal quality.
-- [ ] Distill accepted patterns into prompts/instructions.
+- [x] 2026-03-25 04:28Z Implemented deterministic command/failure heuristics in normalizer and documented payload contract updates.
+- [x] 2026-03-25 04:29Z Re-normalized via backfill (after incremental no-op on unchanged sessions), validated project-wide coverage, and compared baseline vs post-update metrics for target session.
+- [x] 2026-03-25 04:30Z Distilled promotion outcome: keep heuristic logic in pipeline + schema docs for now; defer prompt/instruction promotion until repeated multi-session evidence accumulates.
 
 ## Surprises & Discoveries
 
 - Baseline events already preserve deterministic provenance, so heuristics should be additive in payloads before introducing taxonomy changes.
 - `validate_events.py` enforces a fixed event-type allowlist; adding new event kinds would require validator/schema updates and increases rollout risk.
 - High-value friction is currently present in existing fields (`command_preview`, `output_preview`) but not promoted into structured dimensions.
+- Incremental mode only re-normalizes changed raw session files; code-only heuristic changes required a `backfill` run to regenerate existing session event outputs.
 
 ## Decision Log
 
@@ -31,7 +32,7 @@ Improve OpenCode event normalization so session-derived telemetry is more action
 
 ## Outcomes & Retrospective
 
-Planned outcome: event streams that separate high-signal friction from low-signal noise and support reliable promotion decisions. Executor deliverable is a review-ready PR that updates the normalizer, schema docs, and execution guidance with evidence-backed thresholds.
+Outcome achieved: event streams now include deterministic command-complexity + command-phase heuristics and failure actionability/signature metadata while preserving the v0 taxonomy and core event counts for the seed session.
 
 ## Context and Orientation
 
@@ -133,6 +134,25 @@ Acceptance requires:
 
 - Event manifests and index under `archive/index/opencode/playground/`.
 - Handoff and findings in `agents/context/handoff_2026-03-25.md`.
+- Baseline target-session manifest (pre-change):
+  - `event_count=157`, `tool_execution=90`, `tool_failure=3`, `assistant_turn=61`, `user_turn=1`
+  - source: `archive/manifests/opencode/playground/session_ses_2dd8afe3dffeznX4Gcqb8Fi723.events.manifest.json` before heuristic patch
+- Post-change target-session manifest (after backfill):
+  - `event_count=157`, `tool_execution=90`, `tool_failure=3`, `assistant_turn=61`, `user_turn=1`, `normalizer_version=v0.2.0`
+  - source: `archive/manifests/opencode/playground/session_ses_2dd8afe3dffeznX4Gcqb8Fi723.events.manifest.json`
+- Deterministic failure enrichment examples:
+  - Xyce failure tagged `failure_signature=xyce.analysis_print_type_mismatch`, `failure_actionability=high`, `failure_family=simulate`
+  - Read-tool noise failures tagged `failure_signature=tool.read.null_output_error`, `failure_actionability=low`, `failure_family=tool_io`
+  - source: `archive/derived/events/opencode/playground/session_ses_2dd8afe3dffeznX4Gcqb8Fi723.events.jsonl`
+- Command heuristic enrichment examples:
+  - compile chain: `chain_count=4`, `command_phase=compile`
+  - PR heredoc command: `has_heredoc=true`, `command_phase=pr`
+  - source: `archive/derived/events/opencode/playground/session_ses_2dd8afe3dffeznX4Gcqb8Fi723.events.jsonl`
+- Validation evidence:
+  - `./agents/scripts/run_opencode_ingestion.sh incremental` succeeded (`checked=13 ok=13 failed=0 missing_events=0 missing_raw=0`)
+  - `./agents/scripts/run_opencode_ingestion.sh backfill` succeeded (`checked=13 ok=13 failed=0 missing_events=0 missing_raw=0`)
+  - `python3 agents/tools/opencode_session_pipeline/bin/validate_events.py --project playground --raw-root archive/raw/opencode --events-root archive/derived/events/opencode --index-root archive/index` succeeded
+  - report: `archive/index/opencode/playground/events_validation.json`
 - PR URL: TBD (executor fills at review-ready handoff).
 
 ## Interfaces and Dependencies
@@ -144,32 +164,56 @@ Acceptance requires:
 ## Final Reflection Round
 
 ### Outcome
-- TBD
+- Implemented additive deterministic event heuristics for command complexity/phase and tool-failure actionability/signatures without changing event taxonomy.
+- Re-normalization + validation passed across all available `playground` sessions, and target-session core counts remained stable.
 
 ### What Changed
-- TBD
+- Updated `agents/tools/opencode_session_pipeline/bin/normalize_events.py`:
+  - bumped `normalizer_version` to `v0.2.0`
+  - added command helpers (`chain_count`, heredoc detection, phase classifier)
+  - enriched `tool_execution.payload_compact.input` with `chain_count`, `has_heredoc`, `command_phase`, and deterministic `command_len` fallback
+  - enriched `tool_failure.payload_compact` with `failure_signature`, `failure_actionability`, `failure_family`, and `command_phase`
+- Updated `agents/tools/opencode_session_pipeline/doc/schemas/opencode_event_v0.md` with the new payload guidance for `tool_execution` and `tool_failure`.
+- Updated task execution state in `agents/context/tasks.yaml` (`T-017` moved to `in_progress` during execution).
 
 ### Key Decisions and Trade-offs
-- TBD
+- Kept taxonomy unchanged and focused on additive payload enrichment to avoid validator/downstream migration cost.
+- Used simple deterministic pattern mapping for failure signatures to maximize stability; accepted lower immediate recall for unknown failure families.
+- Kept prompt/instruction promotion deferred because this run demonstrates viability but not yet repeated cross-session trend thresholds.
 
 ### Lessons Learned
-- TBD
+- Code-only normalizer edits require `backfill` to refresh historical event files because incremental mode keys off raw file hashes.
+- Deterministic failure tags materially improve triage without increasing event volume.
+- Command-phase heuristics are useful even when command outputs are absent, but classification quality depends on hint coverage and should be expanded cautiously.
 
 ### Memories to Promote
-- TBD
+- Prefer additive payload fields before event taxonomy changes when validators enforce strict allowlists.
+- Include a low-actionability signature bucket for tool noise to prevent over-weighting non-actionable failures.
 
 ### Frictions and Complaints
-- TBD
+- `history.py` remains event-type oriented and does not yet summarize new failure-signature distributions directly; manual inspection was needed.
 
 ### Improvement Proposals
-- TBD
+- Add a small `history.py` mode (or flag) to aggregate `failure_signature` and `failure_actionability` counts by session.
+- Add deterministic phase-hint tests for ambiguous command previews to avoid regression in classifier behavior.
+- Define promotion thresholds (e.g., repeated signature frequency across >=3 sessions) before instruction/prompt edits.
 
 ### Evidence
-- TBD
+- Baseline command: `./agents/scripts/run_opencode_ingestion.sh incremental`
+- Baseline failures command: `python3 agents/tools/opencode_session_pipeline/bin/history.py --project playground tools --session-id ses_2dd8afe3dffeznX4Gcqb8Fi723 --failed-only`
+- Post-change commands:
+  - `./agents/scripts/run_opencode_ingestion.sh incremental`
+  - `./agents/scripts/run_opencode_ingestion.sh backfill`
+  - `python3 agents/tools/opencode_session_pipeline/bin/validate_events.py --project playground --raw-root archive/raw/opencode --events-root archive/derived/events/opencode --index-root archive/index`
+- Artifacts:
+  - `archive/manifests/opencode/playground/session_ses_2dd8afe3dffeznX4Gcqb8Fi723.events.manifest.json`
+  - `archive/derived/events/opencode/playground/session_ses_2dd8afe3dffeznX4Gcqb8Fi723.events.jsonl`
+  - `archive/index/opencode/playground/events_validation.json`
 
 ### Next Steps
-- TBD
+- Open PR, then monitor reviewer feedback for additional signature mappings worth promoting in a follow-up task.
 
 ---
 
 Revision note (2026-03-25): Expanded this plan from seed outline to an execution-ready workflow with explicit commands, acceptance gates, idempotence/recovery paths, and PR closeout requirements aligned to current telemetry objectives.
+Revision note (2026-03-25 executor): Recorded implementation results, validation evidence, baseline/post comparisons, and completed final reflection based on backfill-regenerated event outputs.
