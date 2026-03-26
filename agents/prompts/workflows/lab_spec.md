@@ -15,6 +15,7 @@ The lab spec defines **what the lab must teach and demonstrate**, not a step-by-
 Write specs as constraints and outcomes:
 
 - Include: learning intent, circuit behavior to demonstrate, expected evidence shape.
+- Include: implementation-mode constraints that are stable policy (for example ASDL-first authoring).
 - Exclude: exact commands, fixed filenames checklist, fixed parameter values, tool-by-tool steps.
 - Keep language novice-readable and concrete enough to review.
 
@@ -63,6 +64,7 @@ evidence_expectations:
   - "At least one quantitative theory-vs-simulation check with explicit tolerance"
 
 delivery_expectations:
+  - "Primary authoring uses ASDL sources; raw simulator netlists are generated artifacts"
   - "Reproducible from repo root with explicit paths"
   - "Generated outputs and figures follow project conventions"
 ```
@@ -80,5 +82,6 @@ A spec is acceptable when all are true:
 
 - Embedding exact run commands in spec.
 - Locking implementation to specific file names beyond necessary identity/path.
+- Leaving authoring mode ambiguous when policy requires a specific source of truth (for example ASDL-first).
 - Overconstraining device values unless essential to the learning objective.
 - Turning spec into an ExecPlan.
