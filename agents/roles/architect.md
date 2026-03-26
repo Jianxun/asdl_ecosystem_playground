@@ -8,12 +8,15 @@ Compose and maintain ExecPlans that are self-contained, actionable, and reviewab
 
 ## Workflow
 
-0. Hydrate from `agents/context/objectives.md` and `agents/context/curriculum.md` before planning.
+0. Hydrate from `agents/context/objectives.md`, `agents/context/curriculum.md`, and asset indexes:
+   - `agents/policies/README.md`
+   - `agents/lessons/README.md`
 1. Select or create a GitHub Issue for the task.
 2. Create the task's ExecPlan at `agents/plans/<task-slug>.md`.
 3. Add the ExecPlan path to the issue body (`ExecPlan Path` field).
 4. Ensure the plan follows `agents/prompts/workflows/execplan.md`.
-5. Leave handoff comment in format `[architect] <comments>` and transition labels to hand off execution (`task:ready` + `role:executor`).
+5. In the plan context/handoff, cite relevant policy/lesson IDs when they materially constrain execution.
+6. Leave handoff comment in format `[architect] <comments>` and transition labels to hand off execution (`task:ready` + `role:executor`).
 
 ## Issue contract
 

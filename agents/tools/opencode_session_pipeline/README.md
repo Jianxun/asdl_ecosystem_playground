@@ -9,6 +9,7 @@ Included tools:
 - `bin/normalize_events.py`
 - `bin/validate_events.py`
 - `bin/history.py`
+- `bin/extract_metrics.py`
 
 Schema docs:
 
@@ -52,6 +53,19 @@ python3 bin/validate_events.py
 python3 bin/history.py timeline --session-id <session_id>
 python3 bin/history.py tools --session-id <session_id> --failed-only
 ```
+
+5) Extract evaluator metrics
+
+```bash
+python3 bin/extract_metrics.py --session-id <session_id> --pretty
+```
+
+This emits a stable metric bundle including:
+
+- token totals (from raw `step-finish` snapshots)
+- wall-clock duration
+- tool/failure counts
+- long/compound bash command counts
 
 ## Output Layout
 

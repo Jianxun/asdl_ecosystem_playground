@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run `codex exec` with optional GitHub Issue scheduling."""
+"""Run `opencode run` with optional GitHub Issue scheduling."""
 
 from __future__ import annotations
 
@@ -41,11 +41,22 @@ ANSI_RESET = "\033[0m"
 
 
 def build_command(prompt: str) -> list[str]:
-    return ["codex", "exec", "--json", "-s", "danger-full-access", prompt]
+    return ["opencode", "run", "--format", "json", prompt]
 
 
 def format_event(payload: dict[str, Any]) -> tuple[str, str]:
     event_type = payload.get("type", "unknown")
+    if event_type == "step_start":
+        return "[step.start]", "default"
+    if event_type == "step_finish":
+        part = payload.get("part", {})
+        reason = part.get("reason") if isinstance(part, dict) else None
+        return f"[step.done] reason={reason}", "default"
+    if event_type == "text":
+        part = payload.get("part", {})
+        text = (part.get("text") if isinstance(part, dict) else "") or ""
+        text = text.strip()
+        return (f"[agent] {text}", "agent") if text else ("[agent]", "agent")
     if event_type == "item.started":
         item = payload.get("item", {})
         item_type = item.get("type", "unknown")
@@ -94,6 +105,10 @@ def render_line(line: str) -> tuple[str, str, str | None, dict[str, Any] | None]
 
     formatted, tag = format_event(payload)
     agent_text: str | None = None
+    if payload.get("type") == "text":
+        part = payload.get("part", {})
+        if isinstance(part, dict):
+            agent_text = (part.get("text") or "").strip() or None
     if payload.get("type") == "item.completed":
         item = payload.get("item", {})
         if item.get("type") == "agent_message":
@@ -190,7 +205,7 @@ def stream_process(
             cwd=cwd,
         )
     except FileNotFoundError as exc:
-        print(f"Required binary not found: {exc}. Ensure codex is installed.", file=sys.stderr)
+        print(f"Required binary not found: {exc}. Ensure opencode is installed.", file=sys.stderr)
         if log_handle is not None and session_id is not None:
             close_task_log(log_handle, session_id, 127, None)
         return 127, None
@@ -434,8 +449,8 @@ def run_scheduler(issue_numbers: list[int], max_rounds: int) -> int:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Launch codex exec in JSON stream mode and print events.")
-    parser.add_argument("--prompt", default=DEFAULT_PROMPT, help="Prompt to pass to codex exec.")
+    parser = argparse.ArgumentParser(description="Launch opencode run in JSON mode and print events.")
+    parser.add_argument("--prompt", default=DEFAULT_PROMPT, help="Prompt to pass to opencode run.")
     parser.add_argument("--issues", nargs="*", type=int, help="GitHub issue numbers to run in order.")
     parser.add_argument(
         "--all-ready",

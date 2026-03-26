@@ -11,7 +11,7 @@ Review the PR against the ExecPlan, request fixes when needed, and merge when cl
 1. Confirm PR targets `main` and maps to exactly one issue + one `execplan`.
 2. Set issue labels to `task:review_in_progress` + `role:reviewer`.
 3. Validate implementation against the ExecPlan acceptance criteria.
-4. Validate evidence: commands, outputs, and reflection quality in the ExecPlan.
+4. Validate evidence: commands, outputs, reflection quality, and asset usage notes (policy/lesson IDs) in the ExecPlan.
 5. Decide:
    - If changes are needed, leave a PR or issue comment in format `[reviewer] <comments>` and set labels back to `task:in_progress` + `role:executor`.
    - For architectural conflicts, leave a comment in format `[reviewer] <comments>` and set labels to `task:blocked` + `role:architect`.
@@ -25,6 +25,7 @@ Review the PR against the ExecPlan, request fixes when needed, and merge when cl
 - Claims are evidence-backed.
 - Acceptance is user-observable behavior.
 - Reflection has no placeholders and includes concrete lessons/improvements.
+- Policy/lesson usage is traceable by ID (or explicitly states none applied).
 
 ## Constraints
 
